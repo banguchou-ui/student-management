@@ -3,30 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>留学生教務管理システム Pro v2</title>
+    <title>留学生教務管理システム Pro v2.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; }
         .attendance-alert { background-color: #fee2e2; color: #991b1b; }
-        .scanner-glow { border: 4px solid #10b981 !important; animation: scan-pulse 2s infinite; }
-        @keyframes scan-pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        .modal-active { display: flex !important; }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-900 h-screen flex flex-col overflow-hidden">
 
     <header class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shadow-sm z-30">
         <div class="flex items-center gap-4">
-            <h1 class="text-xl font-bold text-slate-800">🎓 留学生教務管理 <span class="text-xs font-normal text-slate-400">Cloud Sync Active</span></h1>
-            <button onclick="toggleScanner()" id="scannerBtn" class="bg-yellow-400 text-yellow-900 px-4 py-2 rounded-full text-sm font-bold shadow hover:bg-yellow-300 transition-all">
+            <h1 class="text-xl font-bold text-slate-800">🎓 留学生教務管理 <span class="text-xs font-normal text-slate-400">Live Sync</span></h1>
+            <button onclick="toggleScanner()" class="bg-yellow-400 text-yellow-900 px-4 py-2 rounded-full text-sm font-bold shadow hover:bg-yellow-300 transition-all">
                 <i class="fa-solid fa-barcode"></i> 登校スキャン
-            </button>
-            <button onclick="toggleSafety()" id="safetyBtn" class="bg-slate-200 text-slate-600 px-4 py-2 rounded-full text-xs font-bold transition-all">
-                <i class="fa-solid fa-bell"></i> 安否モードOFF
             </button>
         </div>
         <div class="flex items-center gap-3">
-            <button onclick="openAddModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-indigo-700 transition">+ 新規登録</button>
+            <button onclick="openModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-indigo-700 transition">+ 新規登録</button>
             <button onclick="switchRole()" class="p-2 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-user-shield"></i></button>
         </div>
     </header>
@@ -40,7 +36,7 @@
             <table class="w-full text-left">
                 <thead class="bg-slate-50 text-xs uppercase text-slate-500 font-bold border-b border-slate-200">
                     <tr>
-                        <th class="px-6 py-4">学生情報</th>
+                        <th class="px-6 py-4">学籍番号/氏名</th>
                         <th class="px-6 py-4">国籍/母語</th>
                         <th class="px-6 py-4">出席率</th>
                         <th class="px-6 py-4">学費残高</th>
@@ -49,106 +45,132 @@
                     </tr>
                 </thead>
                 <tbody id="studentList" class="divide-y divide-slate-100">
-                    <tr><td colspan="6" class="text-center py-20 text-slate-400">クラウドデータを読み込み中...</td></tr>
+                    <tr><td colspan="6" class="text-center py-20 text-slate-400">データを同期中...</td></tr>
                 </tbody>
             </table>
         </div>
     </main>
 
-    <div id="scanOverlay" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col items-center justify-center text-white">
-        <button onclick="toggleScanner()" class="absolute top-8 right-8 text-white/50 hover:text-white text-4xl">&times;</button>
-        <div class="text-center mb-8">
-            <i class="fa-solid fa-barcode text-9xl text-green-400 mb-6 animate-pulse"></i>
-            <h2 class="text-4xl font-bold">登校スキャン受付中</h2>
-            <p class="text-green-400 mt-2 text-xl">学生証をスキャンしてください</p>
+    <div id="addModal" class="fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-in fade-in zoom-in duration-200">
+            <h3 class="text-xl font-bold mb-4 border-b pb-2 text-indigo-600">学生情報の新規登録</h3>
+            <form id="addForm" class="space-y-3">
+                <input type="text" id="f_id" placeholder="学籍番号 (例: 2026001)" class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500" required>
+                <input type="text" id="f_name" placeholder="氏名 (漢字)" class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500" required>
+                <div class="flex gap-2">
+                    <input type="text" id="f_nat" placeholder="国籍" class="w-1/2 border rounded-lg p-2">
+                    <input type="text" id="f_lang" placeholder="母語" class="w-1/2 border rounded-lg p-2">
+                </div>
+                <div class="flex gap-2 text-sm text-slate-500">
+                    <div class="w-1/2">出席率(%)<input type="number" id="f_att" value="100" class="w-full border rounded p-2 text-black"></div>
+                    <div class="w-1/2">総学費(円)<input type="number" id="f_total" value="800000" class="w-full border rounded p-2 text-black"></div>
+                </div>
+                <div class="flex justify-end gap-2 pt-4">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 text-slate-500 font-bold">キャンセル</button>
+                    <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold shadow-lg hover:bg-indigo-700">保存して同期</button>
+                </div>
+            </form>
         </div>
-        <div id="scanHistory" class="w-full max-w-xl bg-white/10 p-4 rounded-xl h-64 overflow-auto border border-white/20 font-mono text-sm">
-            <div class="text-gray-500 text-center">スキャンを待っています...</div>
-        </div>
+    </div>
+
+    <div id="scanOverlay" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col items-center justify-center text-white text-center">
+        <button onclick="toggleScanner()" class="absolute top-8 right-8 text-4xl">&times;</button>
+        <i class="fa-solid fa-barcode text-9xl text-green-400 mb-6 animate-pulse"></i>
+        <h2 class="text-3xl font-bold">スキャン受付中...</h2>
+        <div id="scanHistory" class="mt-8 w-80 text-left font-mono text-sm border-t border-white/20 pt-4"></div>
     </div>
 
     <audio id="beep" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
 
     <script>
-        // 你的 Google Apps Script URL (已自动填入)
         const API_URL = "https://script.google.com/macros/s/AKfycbzYPzcb5vdylhpRY11XUqLOKydHOb3VlbXKNkUR3GH9UQKWaoGk5s5T27E2fCdvsCObyQ/exec";
-
         let students = [];
         let role = 'teacher';
         let isScanner = false;
-        let isSafety = false;
         let scanBuffer = "";
         let lastKey = Date.now();
 
-        // 核心：从云端同步数据
         async function sync() {
             try {
                 const res = await fetch(API_URL);
                 const raw = await res.json();
-                students = raw.slice(1); // 排除标题行
+                students = raw.slice(1);
                 render();
-            } catch (e) { alert("データ同期に失敗しました。URLを確認してください。"); }
+            } catch (e) { console.error(e); }
         }
 
-        // 核心：渲染表格
         function render() {
             const list = document.getElementById('studentList');
             const kw = document.getElementById('searchBox').value.toLowerCase();
-            
             const filtered = students.filter(s => s[1].toString().includes(kw) || s[2].includes(kw));
-            
             list.innerHTML = filtered.map(s => {
                 const att = parseFloat(s[5] || 0);
                 const bal = (parseInt(s[6]) || 0) - (parseInt(s[7]) || 0);
-                const hours = parseInt(s[9]) || 0;
-                
-                return `
-                <tr class="hover:bg-slate-50 transition-all ${att < 80 ? 'attendance-alert' : ''}">
-                    <td class="px-6 py-4">
-                        <div class="font-bold text-slate-800">${s[2]}</div>
-                        <div class="text-xs text-slate-400">${s[1]}</div>
-                    </td>
+                return `<tr class="${att < 80 ? 'attendance-alert' : ''} border-b border-slate-100 hover:bg-slate-50">
+                    <td class="px-6 py-4 font-bold">${s[2]}<div class="text-xs font-normal text-slate-400">${s[1]}</div></td>
                     <td class="px-6 py-4 text-sm">${s[3]} / ${s[4]}</td>
-                    <td class="px-6 py-4"><span class="px-2 py-1 rounded text-xs font-bold ${att < 80 ? 'bg-red-200 text-red-700' : 'bg-green-100 text-green-700'}">${att}%</span></td>
+                    <td class="px-6 py-4 font-bold text-xs"><span class="px-2 py-1 rounded ${att < 80 ? 'bg-red-200' : 'bg-green-100 text-green-700'}">${att}%</span></td>
                     <td class="px-6 py-4 text-sm font-semibold ${bal > 0 ? 'text-red-500' : ''}">${bal.toLocaleString()}円</td>
-                    <td class="px-6 py-4 text-sm ${hours > 28 ? 'text-red-600 font-bold' : ''}">${hours}h</td>
-                    <td class="px-6 py-4 text-sm">
-                        <button class="text-indigo-600 hover:underline">詳細</button>
-                        ${role === 'principal' ? `<button onclick="delStu('${s[1]}')" class="text-red-400 hover:text-red-600 ml-4"><i class="fa-solid fa-trash"></i></button>` : ''}
-                    </td>
+                    <td class="px-6 py-4 text-sm">${s[9] || 0}h</td>
+                    <td class="px-6 py-4 text-sm text-indigo-600 cursor-pointer hover:underline">詳細</td>
                 </tr>`;
             }).join('');
         }
 
-        // 扫码监听逻辑 (HID)
+        // --- 录入表单提交逻辑 ---
+        document.getElementById('addForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.innerText = "同期中...";
+            btn.disabled = true;
+
+            const data = [
+                "", // 照片留空
+                document.getElementById('f_id').value,
+                document.getElementById('f_name').value,
+                document.getElementById('f_nat').value,
+                document.getElementById('f_lang').value,
+                document.getElementById('f_att').value,
+                document.getElementById('f_total').value,
+                "0", // 已交额默认为0
+                "", "", "", "" // 其他备注留空
+            ];
+
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // 解决跨域限制
+                    body: JSON.stringify({ action: 'add', studentData: data })
+                });
+                alert("登録成功！Google 表格に反映されます。");
+                closeModal();
+                setTimeout(sync, 1500); // 1.5秒后刷新列表
+            } catch (err) {
+                alert("保存に失敗しました: " + err);
+            } finally {
+                btn.innerText = "保存して同期";
+                btn.disabled = false;
+            }
+        };
+
+        function openModal() { document.getElementById('addModal').classList.add('modal-active'); }
+        function closeModal() { document.getElementById('addModal').classList.remove('modal-active'); }
+
+        // 扫码枪监听
         window.addEventListener('keydown', e => {
             if (!isScanner) return;
             const now = Date.now();
             if (now - lastKey > 100) scanBuffer = "";
             lastKey = now;
             if (e.key === 'Enter') {
-                processScan(scanBuffer);
+                const s = students.find(x => x[1].toString() === scanBuffer.trim());
+                if (s) { document.getElementById('beep').play(); alert(`登校確認: ${s[2]}`); }
                 scanBuffer = "";
             } else if (e.key.length === 1) scanBuffer += e.key;
         });
 
-        function processScan(id) {
-            const s = students.find(x => x[1].toString() === id.trim());
-            const hist = document.getElementById('scanHistory');
-            const time = new Date().toLocaleTimeString();
-            if (s) {
-                document.getElementById('beep').play();
-                hist.innerHTML = `<div class="text-green-400 mb-2 border-b border-white/10 pb-1">[${time}] OK: ${s[2]} (${id})</div>` + hist.innerHTML;
-            } else {
-                hist.innerHTML = `<div class="text-red-400 mb-2 border-b border-white/10 pb-1">[${time}] ERROR: 未登録 (${id})</div>` + hist.innerHTML;
-            }
-        }
-
         function toggleScanner() { isScanner = !isScanner; document.getElementById('scanOverlay').classList.toggle('hidden', !isScanner); }
-        function toggleSafety() { isSafety = !isSafety; document.getElementById('safetyBtn').classList.toggle('bg-red-600', isSafety); document.getElementById('safetyBtn').classList.toggle('text-white', isSafety); render(); }
-        function switchRole() { const p = prompt("校長/管理员パスワード:"); if (p === '8888') { role = 'principal'; alert("校長権限"); render(); } }
-        function openAddModal() { alert("新規登録は Google 表格のシートへ直接追加するか、API経由で送信してください（実装中）"); }
-
+        function switchRole() { if(prompt("Pass:")==='8888'){ role='principal'; alert("Admin Mode"); render(); } }
         window.onload = sync;
     </script>
 </body>
