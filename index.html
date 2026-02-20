@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>留学生教務管理システム Pro v2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; }
+        .attendance-alert { background-color: #fee2e2; color: #991b1b; }
+        .scanner-glow { border: 4px solid #10b981 !important; animation: scan-pulse 2s infinite; }
+        @keyframes scan-pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-900 h-screen flex flex-col overflow-hidden">
+
+    <header class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shadow-sm z-30">
+        <div class="flex items-center gap-4">
+            <h1 class="text-xl font-bold text-slate-800">🎓 留学生教務管理 <span class="text-xs font-normal text-slate-400">Cloud Sync Active</span></h1>
+            <button onclick="toggleScanner()" id="scannerBtn" class="bg-yellow-400 text-yellow-900 px-4 py-2 rounded-full text-sm font-bold shadow hover:bg-yellow-300 transition-all">
+                <i class="fa-solid fa-barcode"></i> 登校スキャン
+            </button>
+            <button onclick="toggleSafety()" id="safetyBtn" class="bg-slate-200 text-slate-600 px-4 py-2 rounded-full text-xs font-bold transition-all">
+                <i class="fa-solid fa-bell"></i> 安否モードOFF
+            </button>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="openAddModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-indigo-700 transition">+ 新規登録</button>
+            <button onclick="switchRole()" class="p-2 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-user-shield"></i></button>
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-auto p-6">
+        <div class="mb-4 flex gap-4">
+            <input type="text" id="searchBox" placeholder="氏名・学籍番号で検索..." class="border border-slate-300 rounded-lg px-4 py-2 w-80 focus:ring-2 focus:ring-indigo-500 outline-none" oninput="render()">
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <table class="w-full text-left">
+                <thead class="bg-slate-50 text-xs uppercase text-slate-500 font-bold border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-4">学生情報</th>
+                        <th class="px-6 py-4">国籍/母語</th>
+                        <th class="px-6 py-4">出席率</th>
+                        <th class="px-6 py-4">学費残高</th>
+                        <th class="px-6 py-4">週工時</th>
+                        <th class="px-6 py-4">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="studentList" class="divide-y divide-slate-100">
+                    <tr><td colspan="6" class="text-center py-20 text-slate-400">クラウドデータを読み込み中...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <div id="scanOverlay" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col items-center justify-center text-white">
+        <button onclick="toggleScanner()" class="absolute top-8 right-8 text-white/50 hover:text-white text-4xl">&times;</button>
+        <div class="text-center mb-8">
+            <i class="fa-solid fa-barcode text-9xl text-green-400 mb-6 animate-pulse"></i>
+            <h2 class="text-4xl font-bold">登校スキャン受付中</h2>
+            <p class="text-green-400 mt-2 text-xl">学生証をスキャンしてください</p>
+        </div>
+        <div id="scanHistory" class="w-full max-w-xl bg-white/10 p-4 rounded-xl h-64 overflow-auto border border-white/20 font-mono text-sm">
+            <div class="text-gray-500 text-center">スキャンを待っています...</div>
+        </div>
+    </div>
+
+    <audio id="beep" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+
+    <script>
+        // 你的 Google Apps Script URL (已自动填入)
+        const API_URL = "https://script.google.com/macros/s/AKfycbzYPzcb5vdylhpRY11XUqLOKydHOb3VlbXKNkUR3GH9UQKWaoGk5s5T27E2fCdvsCObyQ/exec";
+
+        let students = [];
+        let role = 'teacher';
+        let isScanner = false;
+        let isSafety = false;
+        let scanBuffer = "";
+        let lastKey = Date.now();
+
+        // 核心：从云端同步数据
+        async function sync() {
+            try {
+                const res = await fetch(API_URL);
+                const raw = await res.json();
+                students = raw.slice(1); // 排除标题行
+                render();
+            } catch (e) { alert("データ同期に失敗しました。URLを確認してください。"); }
+        }
+
+        // 核心：渲染表格
+        function render() {
+            const list = document.getElementById('studentList');
+            const kw = document.getElementById('searchBox').value.toLowerCase();
+            
+            const filtered = students.filter(s => s[1].toString().includes(kw) || s[2].includes(kw));
+            
+            list.innerHTML = filtered.map(s => {
+                const att = parseFloat(s[5] || 0);
+                const bal = (parseInt(s[6]) || 0) - (parseInt(s[7]) || 0);
+                const hours = parseInt(s[9]) || 0;
+                
+                return `
+                <tr class="hover:bg-slate-50 transition-all ${att < 80 ? 'attendance-alert' : ''}">
+                    <td class="px-6 py-4">
+                        <div class="font-bold text-slate-800">${s[2]}</div>
+                        <div class="text-xs text-slate-400">${s[1]}</div>
+                    </td>
+                    <td class="px-6 py-4 text-sm">${s[3]} / ${s[4]}</td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 rounded text-xs font-bold ${att < 80 ? 'bg-red-200 text-red-700' : 'bg-green-100 text-green-700'}">${att}%</span></td>
+                    <td class="px-6 py-4 text-sm font-semibold ${bal > 0 ? 'text-red-500' : ''}">${bal.toLocaleString()}円</td>
+                    <td class="px-6 py-4 text-sm ${hours > 28 ? 'text-red-600 font-bold' : ''}">${hours}h</td>
+                    <td class="px-6 py-4 text-sm">
+                        <button class="text-indigo-600 hover:underline">詳細</button>
+                        ${role === 'principal' ? `<button onclick="delStu('${s[1]}')" class="text-red-400 hover:text-red-600 ml-4"><i class="fa-solid fa-trash"></i></button>` : ''}
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        // 扫码监听逻辑 (HID)
+        window.addEventListener('keydown', e => {
+            if (!isScanner) return;
+            const now = Date.now();
+            if (now - lastKey > 100) scanBuffer = "";
+            lastKey = now;
+            if (e.key === 'Enter') {
+                processScan(scanBuffer);
+                scanBuffer = "";
+            } else if (e.key.length === 1) scanBuffer += e.key;
+        });
+
+        function processScan(id) {
+            const s = students.find(x => x[1].toString() === id.trim());
+            const hist = document.getElementById('scanHistory');
+            const time = new Date().toLocaleTimeString();
+            if (s) {
+                document.getElementById('beep').play();
+                hist.innerHTML = `<div class="text-green-400 mb-2 border-b border-white/10 pb-1">[${time}] OK: ${s[2]} (${id})</div>` + hist.innerHTML;
+            } else {
+                hist.innerHTML = `<div class="text-red-400 mb-2 border-b border-white/10 pb-1">[${time}] ERROR: 未登録 (${id})</div>` + hist.innerHTML;
+            }
+        }
+
+        function toggleScanner() { isScanner = !isScanner; document.getElementById('scanOverlay').classList.toggle('hidden', !isScanner); }
+        function toggleSafety() { isSafety = !isSafety; document.getElementById('safetyBtn').classList.toggle('bg-red-600', isSafety); document.getElementById('safetyBtn').classList.toggle('text-white', isSafety); render(); }
+        function switchRole() { const p = prompt("校長/管理员パスワード:"); if (p === '8888') { role = 'principal'; alert("校長権限"); render(); } }
+        function openAddModal() { alert("新規登録は Google 表格のシートへ直接追加するか、API経由で送信してください（実装中）"); }
+
+        window.onload = sync;
+    </script>
+</body>
+</html>
