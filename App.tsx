@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Student, FilterState, UserRole, User, SafetyStatus } from './types';
 import { getStoredStudents, saveStoredStudents } from './services/storageService';
+import { fetchStudents, saveStudent, deleteStudent, saveAllStudents } from './services/firebaseService';
 import { getCurrentUser, logout as performLogout } from './services/authService';
 import StudentTable from './components/StudentTable';
 import StudentProfileModal from './components/StudentProfileModal';
@@ -103,43 +104,41 @@ const App: React.FC = () => {
   useEffect(() => {
     const user = getCurrentUser();
     if (user) setCurrentUser(user);
-    
-    // Load and Sanitize Data
-    const loaded = getStoredStudents();
-    const sanitizedStudents = loaded.map(s => ({
-        ...s,
-        id: s.id || crypto.randomUUID(),
-        workInfo: s.workInfo || { days: [], hoursPerWeek: 0 },
-        additionalExams: s.additionalExams || [],
-        counselingRecords: s.counselingRecords || [],
-        warningHistory: s.warningHistory || [],
-        careerMilestones: s.careerMilestones || { resumeComplete: false, interviewTraining: false, jobOffer: false, visaChangeApplied: false },
-        visaChecklist: s.visaChecklist || { graduationCert: false, transcript: false, attendanceCert: false, recommendation: false, jobHuntingStatement: false },
-        bankInfo: s.bankInfo || { bankName: '', branchName: '', accountNumber: '', accountHolder: '' },
-        tuitionBalance: s.tuitionBalance ?? (s.tuitionTotal - s.tuitionPaid),
-        academicInfo: s.academicInfo || { gpa: 0, creditsEarned: false },
-        exitInfo: s.exitInfo || { companyName: '', addressAfterLeaving: '', visaChangeType: '' },
-        safetyStatus: s.safetyStatus || SafetyStatus.UNKNOWN,
-        attendanceLastMonth: s.attendanceLastMonth ?? s.attendanceRate,
-        photoTransform: s.photoTransform || { scale: 1, x: 0, y: 0 },
-        enrollmentDate: s.enrollmentDate || '',
-        emergencyContact: s.emergencyContact || { name: '', relationship: '', phone: '', email: '' }
-    }));
-    
-    setStudents(sanitizedStudents);
-    setIsLoaded(true);
-  }, []);
 
-  useEffect(() => {
-    if (isLoaded) saveStoredStudents(students);
-  }, [students, isLoaded]);
+    // Load and Sanitize Data (Firebase or localStorage via firebaseService)
+    const loadData = async () => {
+      const loaded = await fetchStudents();
+      const sanitizedStudents = loaded.map(s => ({
+          ...s,
+          id: s.id || crypto.randomUUID(),
+          workInfo: s.workInfo || { days: [], hoursPerWeek: 0 },
+          additionalExams: s.additionalExams || [],
+          counselingRecords: s.counselingRecords || [],
+          warningHistory: s.warningHistory || [],
+          careerMilestones: s.careerMilestones || { resumeComplete: false, interviewTraining: false, jobOffer: false, visaChangeApplied: false },
+          visaChecklist: s.visaChecklist || { graduationCert: false, transcript: false, attendanceCert: false, recommendation: false, jobHuntingStatement: false },
+          bankInfo: s.bankInfo || { bankName: '', branchName: '', accountNumber: '', accountHolder: '' },
+          tuitionBalance: s.tuitionBalance ?? (s.tuitionTotal - s.tuitionPaid),
+          academicInfo: s.academicInfo || { gpa: 0, creditsEarned: false },
+          exitInfo: s.exitInfo || { companyName: '', addressAfterLeaving: '', visaChangeType: '' },
+          safetyStatus: s.safetyStatus || SafetyStatus.UNKNOWN,
+          attendanceLastMonth: s.attendanceLastMonth ?? s.attendanceRate,
+          photoTransform: s.photoTransform || { scale: 1, x: 0, y: 0 },
+          enrollmentDate: s.enrollmentDate || '',
+          emergencyContact: s.emergencyContact || { name: '', relationship: '', phone: '', email: '' }
+      }));
+      setStudents(sanitizedStudents);
+      setIsLoaded(true);
+    };
+    loadData();
+  }, []);
 
   const handleLogin = (user: User) => setCurrentUser(user);
   const handleLogout = () => { performLogout(); setCurrentUser(null); setShowUserMgmt(false); };
   const openNewStudentForm = () => { setEditingStudent(null); setIsFormOpen(true); }
   const handleEditClick = (student: Student) => { setEditingStudent(student); setIsFormOpen(true); }
 
-  const handleSaveStudent = (studentData: Student) => {
+  const handleSaveStudent = async (studentData: Student) => {
     if (!currentUser?.permissions.canEditBasicInfo) {
        alert("編集権限がありません");
        return;
@@ -153,10 +152,10 @@ const App: React.FC = () => {
       setStudents(prev => [...prev, studentWithId]);
       isNew = true;
     }
+    await saveStudent(studentWithId);
     setIsFormOpen(false);
     setEditingStudent(null);
-    
-    // Backup Reminder
+
     if (isNew) {
         if(window.confirm("新しい学生が登録されました。\nデータの安全のため、バックアップファイルをダウンロードしますか？")) {
             setTimeout(backupData, 500);
@@ -170,20 +169,18 @@ const App: React.FC = () => {
   }
 
   // --- Delete Logic ---
-  const handleDeleteStudent = (studentId: string) => {
-      if (currentUser?.role !== UserRole.PRINCIPAL) { 
-          alert("この操作は校長権限（8888）が必要です。"); 
-          return; 
+  const handleDeleteStudent = async (studentId: string) => {
+      if (currentUser?.role !== UserRole.PRINCIPAL) {
+          alert("この操作は校長権限（8888）が必要です。");
+          return;
       }
       const targetStudent = students.find(s => s.id === studentId);
       if (!targetStudent) return;
 
       if (window.confirm(`【警告】\n学生名: ${targetStudent.name}\n本当に削除しますか？`)) {
-          const newStudents = students.filter(s => s.id !== studentId);
-          setStudents(newStudents);
-          // Immediately save to storage to ensure persistence
-          saveStoredStudents(newStudents);
-          
+          setStudents(prev => prev.filter(s => s.id !== studentId));
+          await deleteStudent(studentId);
+
           const newSelected = new Set(selectedStudentIds);
           newSelected.delete(studentId);
           setSelectedStudentIds(newSelected);
@@ -251,13 +248,13 @@ const App: React.FC = () => {
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
           try {
               const json = JSON.parse(event.target?.result as string);
               if (Array.isArray(json)) {
                   if(confirm(`バックアップファイルから ${json.length} 名の学生データを復元しますか？\n現在のデータは上書きされます。`)) {
                       setStudents(json);
-                      saveStoredStudents(json);
+                      await saveAllStudents(json);
                       alert("復元完了しました");
                   }
               } else {
