@@ -13,9 +13,15 @@ import SchoolSettingsModal from './components/SchoolSettingsModal';
 import DashboardStats from './components/DashboardStats';
 import AttendanceManager from './components/AttendanceManager';
 import NoticeManager from './components/NoticeManager';
-import { ShieldAlert, Download, Users, Briefcase, LogOut, Key, Settings, Plus, Upload, Database, Siren, CheckSquare, Trash2, Sun, FileDown, FileUp, ScanBarcode, XCircle, LayoutDashboard, CalendarDays, Bell, GraduationCap, UserCog, School } from 'lucide-react';
+import ImportModal from './components/ImportModal';
+import ClassStats from './components/ClassStats';
+import EmailSettingsModal from './components/EmailSettingsModal';
+import { ShieldAlert, Download, Users, Briefcase, LogOut, Key, Settings, Plus, Upload, Database, Siren, CheckSquare, Trash2, Sun, FileDown, FileUp, ScanBarcode, XCircle, LayoutDashboard, CalendarDays, Bell, GraduationCap, UserCog, School, FileSpreadsheet, ClipboardList, ChevronDown, BarChart2, Mail } from 'lucide-react';
+import { exportStudentsToExcel, exportImmigrationReport, exportAdmissionReport } from './utils/exportExcel';
+import { loadSchoolSettings } from './components/SchoolSettingsModal';
+import { getLang, setLang, Lang, LangContext, useTr } from './i18n/translations';
 
-type TabType = 'students' | 'attendance' | 'notices';
+type TabType = 'students' | 'attendance' | 'notices' | 'stats';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -42,6 +48,31 @@ const App: React.FC = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const restoreInputRef = useRef<HTMLInputElement>(null);
+  const [lang, setLangState] = useState<Lang>(getLang);
+
+  const toggleLang = () => {
+    const next: Lang = lang === 'ja' ? 'zh' : 'ja';
+    setLang(next);
+    setLangState(next);
+  };
+
+  const { tr } = useTr();
+  const [showImmigrationMenu, setShowImmigrationMenu] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showToolsMenu, setShowToolsMenu] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [showEmailSettings, setShowEmailSettings] = useState(false);
+
+  const handleImmigrationReport = async (type: 'roster' | 'admission') => {
+    setShowImmigrationMenu(false);
+    const settings = loadSchoolSettings();
+    if (type === 'roster') {
+      await exportImmigrationReport(students, settings);
+    } else {
+      await exportAdmissionReport(students, settings);
+    }
+  };
+
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<FilterState>({
@@ -49,7 +80,8 @@ const App: React.FC = () => {
     jlptLevel: '',
     tuitionStatus: '',
     hasJob: 'all',
-    className: ''
+    className: '',
+    noPhoto: '',
   });
 
   useEffect(() => {
@@ -125,6 +157,11 @@ const App: React.FC = () => {
           attendanceLastMonth: s.attendanceLastMonth ?? s.attendanceRate,
           photoTransform: s.photoTransform || { scale: 1, x: 0, y: 0 },
           enrollmentDate: s.enrollmentDate || '',
+          birthDate: s.birthDate || '',
+          nameRomaji: s.nameRomaji || '',
+          withdrawalDate: s.withdrawalDate || '',
+          withdrawalReason: s.withdrawalReason || '',
+          tuitionHistory: s.tuitionHistory || [],
           emergencyContact: s.emergencyContact || { name: '', relationship: '', phone: '', email: '' }
       }));
       setStudents(sanitizedStudents);
@@ -152,7 +189,12 @@ const App: React.FC = () => {
       setStudents(prev => [...prev, studentWithId]);
       isNew = true;
     }
-    await saveStudent(studentWithId);
+    try {
+      await saveStudent(studentWithId);
+    } catch (error: any) {
+      alert('保存に失敗しました: ' + (error?.message ?? String(error)));
+      return;
+    }
     setIsFormOpen(false);
     setEditingStudent(null);
 
@@ -163,9 +205,14 @@ const App: React.FC = () => {
     }
   };
   
-  const handleProfileUpdate = (updatedStudent: Student) => {
+  const handleProfileUpdate = async (updatedStudent: Student) => {
      setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
      setViewingStudent(updatedStudent);
+     try {
+       await saveStudent(updatedStudent);
+     } catch (error: any) {
+       console.error('保存に失敗しました:', error);
+     }
   }
 
   // --- Delete Logic ---
@@ -268,27 +315,24 @@ const App: React.FC = () => {
       e.target.value = ''; // Reset input
   };
 
-  const exportCSV = () => {
+  const exportExcel = () => {
     if (!currentUser?.permissions.canExportData) return;
-    const headers = [
-      '氏名', '学籍番号', '性別', '国籍', '在留カード番号', '出席率', '前月出席', 'GPA', '学分修了', '安否',
-      '就活:履歴書', '就活:面接', '就活:内定', '就活:VISA申請',
-      '銀行名', '口座番号', '名義人',
-      '内定先', '離職後住所'
-    ];
-    const rows = students.map(s => [
-      s.name, s.studentId, s.gender, s.nationality, s.zairyuCardNumber, `${s.attendanceRate}%`, `${s.attendanceLastMonth}%`, s.academicInfo.gpa, s.academicInfo.creditsEarned ? 'Yes' : 'No', s.safetyStatus,
-      s.careerMilestones.resumeComplete ? '済' : '未', s.careerMilestones.interviewTraining ? '済' : '未', s.careerMilestones.jobOffer ? '済' : '未', s.careerMilestones.visaChangeApplied ? '済' : '未',
-      s.bankInfo.bankName, s.bankInfo.accountNumber, s.bankInfo.accountHolder,
-      s.exitInfo.companyName, s.exitInfo.addressAfterLeaving
-    ]);
-    const csvContent = [headers.join(','), ...rows.map(row => row.map(cell => `"${cell || ''}"`).join(','))].join('\n');
-    const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `students_full_export_${new Date().toISOString().slice(0,10)}.csv`;
-    document.body.appendChild(link);
-    link.click();
+    exportStudentsToExcel(students);
+  };
+
+  const handleImport = async (imported: Student[]) => {
+    const merged = [...students];
+    for (const s of imported) {
+      const idx = merged.findIndex(e => e.id === s.id);
+      if (idx !== -1) merged[idx] = s;
+      else merged.push(s);
+    }
+    setStudents(merged);
+    try {
+      await saveAllStudents(merged);
+    } catch (err: any) {
+      console.error('インポート保存エラー:', err);
+    }
   };
 
   const totalStudents = students.length;
@@ -297,6 +341,7 @@ const App: React.FC = () => {
   if (!currentUser) return <LoginPage onLogin={handleLogin} />;
 
   return (
+    <LangContext.Provider value={lang}>
     <div className={`flex h-screen w-full font-sans text-gray-900 overflow-hidden ${safetyMode ? 'bg-red-50' : 'bg-gray-100'}`}>
       <div className="flex-1 flex flex-col h-full w-full">
         {/* Header */}
@@ -316,19 +361,25 @@ const App: React.FC = () => {
                   onClick={() => setActiveTab('students')}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === 'students' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
                 >
-                  <Users size={15} /> 学生管理
+                  <Users size={15} /> {tr('studentManagement')}
                 </button>
                 <button
                   onClick={() => setActiveTab('attendance')}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === 'attendance' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
                 >
-                  <CalendarDays size={15} /> 出席管理
+                  <CalendarDays size={15} /> {tr('attendanceManagement')}
                 </button>
                 <button
                   onClick={() => setActiveTab('notices')}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === 'notices' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
                 >
-                  <Bell size={15} /> お知らせ
+                  <Bell size={15} /> {tr('notices')}
+                </button>
+                <button
+                  onClick={() => setActiveTab('stats')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === 'stats' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                >
+                  <BarChart2 size={15} /> 統計
                 </button>
               </nav>
             )}
@@ -347,13 +398,13 @@ const App: React.FC = () => {
                     onClick={() => setScannerActive(true)} 
                     className="flex items-center gap-2 px-3 py-1.5 bg-yellow-400 text-yellow-900 rounded-full font-bold shadow hover:bg-yellow-300 transition text-sm"
                 >
-                    <ScanBarcode size={16} /> スキャン
+                    <ScanBarcode size={16} /> {tr('scannerLabel')}
                 </button>
             )}
 
             {!safetyMode && activeTab === 'students' && currentUser.permissions.canEditBasicInfo && (
                 <button onClick={openNewStudentForm} className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition font-bold text-sm">
-                    <Plus size={16} />新規登録
+                    <Plus size={16} />{tr('addStudent')}
                 </button>
             )}
           </div>
@@ -362,36 +413,151 @@ const App: React.FC = () => {
              {/* Batch Actions Bar */}
              {selectedStudentIds.size > 0 && (
                  <div className="mr-2 bg-indigo-600 text-white px-3 py-1 rounded-lg flex items-center gap-2 shadow text-sm">
-                     <span className="font-bold">{selectedStudentIds.size}名 選択中</span>
-                     <button onClick={handleBatchVacation} className="text-xs bg-white text-indigo-600 px-2 py-0.5 rounded hover:bg-indigo-50 flex items-center gap-1"><Sun size={12}/> 長期休暇</button>
+                     <span className="font-bold">{selectedStudentIds.size}{tr('selected')}</span>
+                     <button onClick={handleBatchVacation} className="text-xs bg-white text-indigo-600 px-2 py-0.5 rounded hover:bg-indigo-50 flex items-center gap-1"><Sun size={12}/> {tr('longVacation')}</button>
                      <button onClick={() => setSelectedStudentIds(new Set())} className="p-1 hover:bg-indigo-500 rounded"><XCircle size={14}/></button>
                  </div>
              )}
 
+             {/* ── ツール ▾ Dropdown ── */}
              {!safetyMode && (
-                <>
-                    <input type="file" ref={restoreInputRef} className="hidden" accept=".json" onChange={handleRestoreFile} />
-                    <button onClick={handleRestoreClick} className="p-2 text-gray-500 hover:bg-gray-100 rounded-full" title="バックアップから復元"><FileUp size={16} /></button>
-                    <button onClick={backupData} className="p-2 text-gray-500 hover:bg-gray-100 rounded-full" title="バックアップ保存"><Database size={16} /></button>
-                    {currentUser.role === UserRole.PRINCIPAL && (
-                        <button onClick={handleResetData} className="p-2 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-full" title="データ初期化"><Trash2 size={16} /></button>
-                    )}
-                </>
+               <div className="relative">
+                 <input type="file" ref={restoreInputRef} className="hidden" accept=".json" onChange={handleRestoreFile} />
+                 <button
+                   onClick={() => setShowToolsMenu(v => !v)}
+                   className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-200 rounded transition"
+                 >
+                   <Settings size={13} /> ツール <ChevronDown size={11} />
+                 </button>
+                 {showToolsMenu && (
+                   <>
+                     <div className="fixed inset-0 z-30" onClick={() => setShowToolsMenu(false)} />
+                     <div className="absolute right-0 mt-1 w-52 bg-white border border-gray-200 rounded-lg shadow-lg z-40 overflow-hidden text-sm">
+                       {/* Export group */}
+                       {currentUser.permissions.canExportData && (
+                         <>
+                           <div className="px-3 py-1.5 text-xs text-gray-400 font-semibold uppercase tracking-wide bg-gray-50 border-b border-gray-100">エクスポート</div>
+                           <button onClick={() => { setShowToolsMenu(false); exportExcel(); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2.5">
+                             <FileSpreadsheet size={14} className="text-green-600" /> 学生一覧 Excel
+                           </button>
+                           <button onClick={() => { setShowToolsMenu(false); handleImmigrationReport('roster'); }} className="w-full text-left px-4 py-2 hover:bg-indigo-50 flex items-center gap-2.5">
+                             <ClipboardList size={14} className="text-indigo-600" />
+                             <span>在籍者名簿 <span className="text-xs text-gray-400">5/11月</span></span>
+                           </button>
+                           <button onClick={() => { setShowToolsMenu(false); handleImmigrationReport('admission'); }} className="w-full text-left px-4 py-2 hover:bg-orange-50 flex items-center gap-2.5">
+                             <ClipboardList size={14} className="text-orange-500" />
+                             <span>入退学届出一覧</span>
+                           </button>
+                         </>
+                       )}
+                       {/* Import group */}
+                       {currentUser.permissions.canEditBasicInfo && (
+                         <>
+                           <div className="border-t border-gray-100" />
+                           <div className="px-3 py-1.5 text-xs text-gray-400 font-semibold uppercase tracking-wide bg-gray-50 border-b border-gray-100">インポート</div>
+                           <button onClick={() => { setShowToolsMenu(false); setShowImport(true); }} className="w-full text-left px-4 py-2 hover:bg-green-50 flex items-center gap-2.5">
+                             <Upload size={14} className="text-green-600" /> 一括インポート
+                           </button>
+                         </>
+                       )}
+                       {/* Backup group */}
+                       <div className="border-t border-gray-100" />
+                       <div className="px-3 py-1.5 text-xs text-gray-400 font-semibold uppercase tracking-wide bg-gray-50 border-b border-gray-100">バックアップ</div>
+                       <button onClick={() => { setShowToolsMenu(false); backupData(); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2.5">
+                         <Database size={14} className="text-gray-500" /> バックアップ保存
+                       </button>
+                       <button onClick={() => { setShowToolsMenu(false); handleRestoreClick(); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2.5">
+                         <FileUp size={14} className="text-gray-500" /> バックアップから復元
+                       </button>
+                       {/* Email / Danger */}
+                       <div className="border-t border-gray-100" />
+                       <button onClick={() => { setShowToolsMenu(false); setShowEmailSettings(true); }} className="w-full text-left px-4 py-2 hover:bg-blue-50 flex items-center gap-2.5">
+                         <Mail size={14} className="text-blue-500" /> メール設定
+                       </button>
+                       {currentUser.role === UserRole.PRINCIPAL && (
+                         <>
+                           <div className="border-t border-gray-100" />
+                           <button onClick={() => { setShowToolsMenu(false); handleResetData(); }} className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 flex items-center gap-2.5">
+                             <Trash2 size={14} /> データ初期化
+                           </button>
+                         </>
+                       )}
+                     </div>
+                   </>
+                 )}
+               </div>
              )}
-             
-             <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white shadow-sm text-sm ${currentUser.role === UserRole.PRINCIPAL ? 'bg-purple-600' : 'bg-blue-600'}`}>
-                {currentUser.name.charAt(0)}
+
+             {/* Immigration report dropdown */}
+             {currentUser.permissions.canExportData && (
+               <div className="relative">
+                 <button
+                   onClick={() => setShowImmigrationMenu(v => !v)}
+                   className="flex items-center gap-1 px-2 py-1.5 text-xs font-bold text-gray-600 hover:text-indigo-700 hover:bg-indigo-50 border border-gray-200 rounded transition"
+                   title="入管届出"
+                 >
+                   <ClipboardList size={14} /> 入管届出 <ChevronDown size={12} />
+                 </button>
+                 {showImmigrationMenu && (
+                   <>
+                     <div className="fixed inset-0 z-30" onClick={() => setShowImmigrationMenu(false)} />
+                     <div className="absolute right-0 mt-1 w-52 bg-white border border-gray-200 rounded-lg shadow-lg z-40 overflow-hidden">
+                       <button onClick={() => handleImmigrationReport('roster')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 flex items-center gap-2">
+                         <FileSpreadsheet size={14} className="text-indigo-600" />
+                         <div><div className="font-medium">在籍者名簿</div><div className="text-xs text-gray-400">5月/11月 定期届出用</div></div>
+                       </button>
+                       <div className="border-t border-gray-100" />
+                       <button onClick={() => handleImmigrationReport('admission')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 flex items-center gap-2">
+                         <FileSpreadsheet size={14} className="text-orange-500" />
+                         <div><div className="font-medium">入退学届出一覧</div><div className="text-xs text-gray-400">入退学から14日以内</div></div>
+                       </button>
+                     </div>
+                   </>
+                 )}
+               </div>
+             )}
+
+             {/* Avatar dropdown */}
+             <div className="relative">
+               <button
+                 onClick={() => setShowUserMenu(v => !v)}
+                 className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white shadow-sm text-sm ${currentUser.role === UserRole.PRINCIPAL ? 'bg-purple-600' : 'bg-blue-600'}`}
+                 title={currentUser.name}
+               >
+                 {currentUser.name.charAt(0)}
+               </button>
+               {showUserMenu && (
+                 <>
+                   <div className="fixed inset-0 z-30" onClick={() => setShowUserMenu(false)} />
+                   <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-40 overflow-hidden">
+                     <div className="px-3 py-2 border-b border-gray-100 text-xs text-gray-500 truncate">{currentUser.name}</div>
+                     <button onClick={() => { setShowUserMenu(false); setShowPwdModal(true); }} className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2">
+                       <Key size={14} className="text-gray-400" /> パスワード変更
+                     </button>
+                     <button onClick={() => { setShowUserMenu(false); handleLogout(); }} className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2">
+                       <LogOut size={14} /> ログアウト
+                     </button>
+                   </div>
+                 </>
+               )}
              </div>
-             {currentUser.permissions.canExportData && <button onClick={exportCSV} className="p-2 text-gray-500 hover:text-green-600" title="CSVエクスポート"><FileDown size={18} /></button>}
+
              {currentUser.permissions.canManageUsers && <button onClick={() => setShowUserMgmt(true)} className="p-2 text-gray-500 hover:text-purple-600" title="ユーザー管理"><UserCog size={18} /></button>}
+             <button onClick={toggleLang} className="p-1.5 text-xs font-bold text-gray-500 hover:text-indigo-600 border border-gray-200 rounded" title="言語切替">{tr('langToggle')}</button>
              <button onClick={() => setShowSchoolSettings(true)} className="p-2 text-gray-500 hover:text-indigo-600" title="学校設定"><Settings size={18} /></button>
-             <button onClick={handleLogout} className={`p-2 rounded-full transition ${safetyMode ? 'text-white hover:bg-red-600' : 'text-gray-400 hover:text-red-500 hover:bg-red-50'}`} title="ログアウト"><LogOut size={16} /></button>
           </div>
         </header>
 
         {/* Dashboard Stats - always visible in student tab */}
         {!safetyMode && activeTab === 'students' && (
-          <DashboardStats students={students} />
+          <DashboardStats
+            students={students}
+            onPhotoFilter={() => {
+              setFilters(prev => ({ ...prev, noPhoto: prev.noPhoto ? '' : 'true' }));
+              setActiveTab('students');
+            }}
+            photoFilterActive={!!filters.noPhoto}
+          />
         )}
 
         {/* Tab Content */}
@@ -419,7 +585,11 @@ const App: React.FC = () => {
         )}
 
         {activeTab === 'notices' && (
-          <NoticeManager currentUserName={currentUser.name} canEdit={currentUser.permissions.canEditBasicInfo} />
+          <NoticeManager currentUserName={currentUser.name} canEdit={currentUser.permissions.canEditBasicInfo} students={students} />
+        )}
+
+        {activeTab === 'stats' && (
+          <ClassStats students={students} />
         )}
       </div>
 
@@ -435,6 +605,14 @@ const App: React.FC = () => {
       {showUserMgmt && <UserManagementModal onClose={() => setShowUserMgmt(false)} currentUsername={currentUser.username} />}
       {showPwdModal && <ChangePasswordModal username={currentUser.username} onClose={() => setShowPwdModal(false)} />}
       {showSchoolSettings && <SchoolSettingsModal onClose={() => setShowSchoolSettings(false)} />}
+      {showImport && (
+        <ImportModal
+          onClose={() => setShowImport(false)}
+          onImport={handleImport}
+          existingStudents={students}
+        />
+      )}
+      {showEmailSettings && <EmailSettingsModal onClose={() => setShowEmailSettings(false)} />}
       
       {/* Scanner Overlay */}
       {scannerActive && (
@@ -475,6 +653,7 @@ const App: React.FC = () => {
           </div>
       )}
     </div>
+    </LangContext.Provider>
   );
 };
 

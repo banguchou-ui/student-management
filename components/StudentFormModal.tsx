@@ -112,6 +112,14 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.name?.trim()) {
+      alert('氏名を入力してください');
+      return;
+    }
+    if (!formData.studentId?.trim()) {
+      alert('学籍番号を入力してください');
+      return;
+    }
     const finalData = { ...formData };
     if (formData.nationality === 'その他 (手入力)') finalData.nationality = customNat;
     if (formData.motherTongue === 'その他 (手入力)') finalData.motherTongue = customLang;
@@ -201,6 +209,7 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                                 <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div><label className="text-xs font-bold text-gray-500">氏名 *</label><input required placeholder="例: 王 小明" value={formData.name} onChange={e => handleChange('name', e.target.value)} className="w-full border p-2 rounded"/></div>
                                     <div><label className="text-xs font-bold text-gray-500">学籍番号 *</label><input required placeholder="例: 2301001" value={formData.studentId} onChange={e => handleChange('studentId', e.target.value)} className="w-full border p-2 rounded"/></div>
+                                    <div className="md:col-span-2"><label className="text-xs font-bold text-gray-500">ローマ字氏名</label><input placeholder="例: YAMADA TARO" value={formData.nameRomaji || ''} onChange={e => handleChange('nameRomaji', e.target.value)} className="w-full border p-2 rounded"/></div>
                                     
                                     <div className="flex gap-2">
                                         <div className="flex-1">
@@ -211,6 +220,7 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                                         </div>
                                         <div className="flex-1"><label className="text-xs font-bold text-gray-500">年齢</label><input type="number" value={formData.age} onChange={e => handleChange('age', parseInt(e.target.value))} className="w-full border p-2 rounded"/></div>
                                     </div>
+                                    <div><label className="text-xs font-bold text-gray-500">生年月日</label><input type="date" value={formData.birthDate || ''} onChange={e => handleChange('birthDate', e.target.value)} className="w-full border p-2 rounded"/></div>
 
                                     <div className="flex gap-2">
                                         <div className="flex-1"><label className="text-xs font-bold text-gray-500">クラス</label><input value={formData.className} onChange={e => handleChange('className', e.target.value)} className="w-full border p-2 rounded" placeholder="例: A1"/></div>
@@ -354,13 +364,75 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                                     <span className="text-gray-500 font-bold">残額（未納分）:</span>
                                     <div className="flex items-center gap-2">
                                         <span className="text-gray-400">¥</span>
-                                        <input 
-                                            type="number" 
-                                            value={formData.tuitionBalance ?? (formData.tuitionTotal - formData.tuitionPaid)} 
-                                            onChange={e => handleChange('tuitionBalance', parseInt(e.target.value))} 
+                                        <input
+                                            type="number"
+                                            value={formData.tuitionBalance ?? (formData.tuitionTotal - formData.tuitionPaid)}
+                                            onChange={e => handleChange('tuitionBalance', parseInt(e.target.value))}
                                             className={`font-bold text-lg bg-transparent border-b border-gray-300 focus:border-indigo-500 outline-none w-32 text-right ${(formData.tuitionBalance ?? (formData.tuitionTotal - formData.tuitionPaid)) > 0 ? 'text-red-600' : 'text-green-600'}`}
                                         />
                                     </div>
+                                </div>
+                            </div>
+
+                            {/* 納付履歴 */}
+                            <div className="mt-6">
+                                <div className="flex items-center justify-between mb-3">
+                                    <h4 className="text-sm font-bold text-gray-600">納付履歴</h4>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleChange('tuitionHistory', [...(formData.tuitionHistory || []), { date: '', amount: 0, note: '' }])}
+                                        className="flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded hover:bg-indigo-100 font-bold"
+                                    >
+                                        <Plus size={12} /> 追加
+                                    </button>
+                                </div>
+                                {(formData.tuitionHistory || []).length === 0 && (
+                                    <p className="text-xs text-gray-400 text-center py-2">履歴はありません</p>
+                                )}
+                                <div className="space-y-2">
+                                    {(formData.tuitionHistory || []).map((entry, idx) => (
+                                        <div key={idx} className="flex gap-2 items-center bg-gray-50 p-2 rounded border">
+                                            <input
+                                                type="date"
+                                                value={entry.date}
+                                                onChange={e => {
+                                                    const h = [...formData.tuitionHistory];
+                                                    h[idx] = { ...h[idx], date: e.target.value };
+                                                    handleChange('tuitionHistory', h);
+                                                }}
+                                                className="border rounded p-1 text-xs w-32"
+                                            />
+                                            <input
+                                                type="number"
+                                                placeholder="金額"
+                                                value={entry.amount || ''}
+                                                onChange={e => {
+                                                    const h = [...formData.tuitionHistory];
+                                                    h[idx] = { ...h[idx], amount: parseInt(e.target.value) || 0 };
+                                                    handleChange('tuitionHistory', h);
+                                                }}
+                                                className="border rounded p-1 text-xs w-24"
+                                            />
+                                            <input
+                                                type="text"
+                                                placeholder="備考"
+                                                value={entry.note}
+                                                onChange={e => {
+                                                    const h = [...formData.tuitionHistory];
+                                                    h[idx] = { ...h[idx], note: e.target.value };
+                                                    handleChange('tuitionHistory', h);
+                                                }}
+                                                className="border rounded p-1 text-xs flex-1"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => handleChange('tuitionHistory', formData.tuitionHistory.filter((_, i) => i !== idx))}
+                                                className="text-red-400 hover:text-red-600 p-1"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>
@@ -440,6 +512,16 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                             <div className="grid grid-cols-1 gap-2">
                                 <label className="text-xs font-bold text-gray-500">離籍後の住所（帰国/就職後）</label>
                                 <input value={formData.exitInfo.addressAfterLeaving} onChange={e => handleDeepChange('exitInfo', 'addressAfterLeaving', e.target.value)} className="w-full border p-2 rounded" placeholder="郵便番号・住所"/>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-dashed border-gray-200">
+                                <div>
+                                    <label className="text-xs font-bold text-gray-500">退学日</label>
+                                    <input type="date" value={formData.withdrawalDate || ''} onChange={e => handleChange('withdrawalDate', e.target.value)} className="w-full border p-2 rounded"/>
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-gray-500">退学理由</label>
+                                    <input value={formData.withdrawalReason || ''} onChange={e => handleChange('withdrawalReason', e.target.value)} className="w-full border p-2 rounded" placeholder="退学・転校・帰国等"/>
+                                </div>
                             </div>
                         </div>
 

@@ -1,7 +1,8 @@
 import React from 'react';
+import { useTr } from '../i18n/translations';
 import { Student, FilterState, UserPermissions, UserRole, TuitionStatus, SafetyStatus } from '../types';
 import { NATIONALITIES, JLPT_LEVELS, TUITION_STATUSES } from '../constants';
-import { Edit2, Eye, AlertCircle, Briefcase, Search, Trash2, TrendingDown, Star, Siren, GraduationCap, AlertTriangle } from 'lucide-react';
+import { Edit2, Eye, AlertCircle, Briefcase, Search, Trash2, TrendingDown, Star, Siren, GraduationCap, AlertTriangle, Camera } from 'lucide-react';
 
 interface StudentTableProps {
   students: Student[];
@@ -26,16 +27,19 @@ const StudentTable: React.FC<StudentTableProps> = ({
   safetyMode, selectedIds, onToggleSelect, onToggleSafety
 }) => {
 
+  const { tr } = useTr();
+
   const filteredStudents = students.filter(student => {
     const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) || student.studentId.includes(searchTerm);
     const matchesNationality = filters.nationality ? student.nationality === filters.nationality : true;
     const matchesJLPT = filters.jlptLevel ? student.jlptLevel === filters.jlptLevel : true;
     const matchesTuition = filters.tuitionStatus ? student.tuitionStatus === filters.tuitionStatus : true;
     const matchesClass = filters.className ? student.className.includes(filters.className) : true;
+    const matchesPhoto = filters.noPhoto ? !student.photoBase64 : true;
     let matchesJob = true;
     if (filters.hasJob === 'yes') matchesJob = !!student.workInfo.location;
     if (filters.hasJob === 'no') matchesJob = !student.workInfo.location;
-    return matchesSearch && matchesNationality && matchesJLPT && matchesTuition && matchesJob && matchesClass;
+    return matchesSearch && matchesNationality && matchesJLPT && matchesTuition && matchesJob && matchesClass && matchesPhoto;
   });
   
   const isPrincipal = currentUserRole === UserRole.PRINCIPAL;
@@ -48,14 +52,20 @@ const StudentTable: React.FC<StudentTableProps> = ({
             <div className="flex flex-col md:flex-row gap-4 mb-4">
             <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                <input type="text" placeholder="氏名または学籍番号で検索..." value={searchTerm} onChange={(e) => onSearchChange(e.target.value)} className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
+                <input type="text" {...{placeholder: tr('searchPlaceholder')}} value={searchTerm} onChange={(e) => onSearchChange(e.target.value)} className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
             </div>
             </div>
             <div className="flex flex-wrap gap-2 md:gap-4">
-            <select value={filters.nationality} onChange={(e) => onFilterChange('nationality', e.target.value)} className="border rounded px-3 py-1.5 text-sm bg-gray-50 focus:bg-white"><option value="">全ての国籍</option>{NATIONALITIES.map(n => <option key={n} value={n}>{n}</option>)}</select>
-            <select value={filters.jlptLevel} onChange={(e) => onFilterChange('jlptLevel', e.target.value)} className="border rounded px-3 py-1.5 text-sm bg-gray-50 focus:bg-white"><option value="">全てのJLPT</option>{JLPT_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}</select>
-            <select value={filters.tuitionStatus} onChange={(e) => onFilterChange('tuitionStatus', e.target.value)} className="border rounded px-3 py-1.5 text-sm bg-gray-50 focus:bg-white"><option value="">全ての学費状況</option>{TUITION_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}</select>
-            <input placeholder="クラス" value={filters.className} onChange={(e) => onFilterChange('className', e.target.value)} className="border rounded px-3 py-1.5 text-sm bg-gray-50 focus:bg-white w-24" />
+            <select value={filters.nationality} onChange={(e) => onFilterChange('nationality', e.target.value)} className="border rounded px-3 py-1.5 text-sm bg-gray-50 focus:bg-white"><option value="">{tr('allNationalities')}</option>{NATIONALITIES.map(n => <option key={n} value={n}>{n}</option>)}</select>
+            <select value={filters.jlptLevel} onChange={(e) => onFilterChange('jlptLevel', e.target.value)} className="border rounded px-3 py-1.5 text-sm bg-gray-50 focus:bg-white"><option value="">{tr('allJLPT')}</option>{JLPT_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}</select>
+            <select value={filters.tuitionStatus} onChange={(e) => onFilterChange('tuitionStatus', e.target.value)} className="border rounded px-3 py-1.5 text-sm bg-gray-50 focus:bg-white"><option value="">{tr('allTuition')}</option>{TUITION_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}</select>
+            <input {...{placeholder: tr('classPlaceholder')}} value={filters.className} onChange={(e) => onFilterChange('className', e.target.value)} className="border rounded px-3 py-1.5 text-sm bg-gray-50 focus:bg-white w-24" />
+            <button
+              onClick={() => onFilterChange('noPhoto', filters.noPhoto ? '' : 'true')}
+              className={`flex items-center gap-1.5 border rounded px-3 py-1.5 text-sm transition ${filters.noPhoto ? 'bg-pink-100 text-pink-700 border-pink-300 font-bold' : 'bg-gray-50 text-gray-600 hover:bg-pink-50 hover:text-pink-600 hover:border-pink-200'}`}
+            >
+              <Camera size={13} /> 写真なし
+            </button>
             </div>
         </div>
       )}
@@ -67,11 +77,11 @@ const StudentTable: React.FC<StudentTableProps> = ({
             <thead className={`${safetyMode ? 'bg-red-200 text-red-800' : 'bg-gray-100 text-gray-600'} text-xs uppercase sticky top-0 z-10`}>
               <tr>
                 <th className="p-4 w-10"></th>
-                <th className="p-4 font-semibold w-[25%]">学生情報</th>
-                {!safetyMode && <th className="p-4 font-semibold w-[15%]">学業・出席</th>}
-                {!safetyMode && <th className="p-4 font-semibold w-[20%]">財務・ビザ</th>}
-                <th className="p-4 font-semibold w-[30%]">状況・アラート</th>
-                <th className="p-4 font-semibold w-[10%] text-right">操作</th>
+                <th className="p-4 font-semibold w-[25%]">{tr('colStudentInfo')}</th>
+                {!safetyMode && <th className="p-4 font-semibold w-[15%]">{tr('colAcademic')}</th>}
+                {!safetyMode && <th className="p-4 font-semibold w-[20%]">{tr('colFinanceVisa')}</th>}
+                <th className="p-4 font-semibold w-[30%]">{tr('colStatus')}</th>
+                <th className="p-4 font-semibold w-[10%] text-right">{tr('colActions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -106,9 +116,10 @@ const StudentTable: React.FC<StudentTableProps> = ({
                           </div>
                           <div>
                              <div className="font-bold text-gray-900 text-base flex items-center gap-1">
-                                {student.name}
+                                {student.name || '名前未設定'}
                                 {attendanceDrop && <TrendingDown size={16} className="text-red-500 animate-bounce" title="出席率急落警告" />}
                                 {isHighAchiever && <Star size={14} className="text-yellow-500 fill-yellow-500" title="成績優秀" />}
+                                {!student.photoBase64 && <Camera size={13} className="text-pink-400" title="写真未登録" />}
                              </div>
                              <div className="text-xs text-gray-500 mt-1 flex gap-2">
                                  <span className="bg-gray-100 px-1 rounded">{student.studentId}</span> 

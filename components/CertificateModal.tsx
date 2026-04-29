@@ -35,6 +35,9 @@ const CertPage: React.FC<{ title: string; children: React.ReactNode }> = ({ titl
 
         {/* School header */}
         <div className="text-center mb-6">
+          {settings.logoBase64 && (
+            <img src={settings.logoBase64} className="h-14 mx-auto mb-2 object-contain" alt="logo" />
+          )}
           <p className="text-lg font-bold tracking-widest">{settings.schoolName}</p>
           <p className="text-xs text-gray-500 mt-0.5">{settings.schoolAddress}</p>
         </div>
@@ -80,7 +83,7 @@ const EnrollmentCert: React.FC<{ student: Student }> = ({ student }) => {
     ['氏　　名', student.name],
     ['学 籍 番 号', student.studentId],
     ['国　　籍', student.nationality],
-    ['年　　齢', `${student.age} 歳`],
+    ['生 年 月 日', student.birthDate || `${student.age} 歳`],
     ['クラス・年次', `${student.className}　${student.grade}`],
     ['在 籍 期 間', enrollPeriod],
   ];

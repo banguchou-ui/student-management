@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Save, School } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { X, Save, School, Upload, Image } from 'lucide-react';
 
 export interface SchoolSettings {
   schoolName: string;
@@ -7,6 +7,8 @@ export interface SchoolSettings {
   principalName: string;
   phone: string;
   email: string;
+  logoBase64: string;
+  defaultResidence: string;
 }
 
 const STORAGE_KEY = 'sms_school_settings';
@@ -17,6 +19,8 @@ export const DEFAULT_SCHOOL_SETTINGS: SchoolSettings = {
   principalName: '',
   phone: '',
   email: '',
+  logoBase64: '',
+  defaultResidence: '',
 };
 
 export const loadSchoolSettings = (): SchoolSettings => {
@@ -37,9 +41,16 @@ interface Props {
 
 const SchoolSettingsModal: React.FC<Props> = ({ onClose }) => {
   const [form, setForm] = useState<SchoolSettings>(loadSchoolSettings);
+  const logoRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (field: keyof SchoolSettings, value: string) =>
     setForm(prev => ({ ...prev, [field]: value }));
+
+  const handleLogoUpload = (file: File) => {
+    const reader = new FileReader();
+    reader.onloadend = () => handleChange('logoBase64', reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
   const handleSave = () => {
     saveSchoolSettings(form);
@@ -55,7 +66,48 @@ const SchoolSettingsModal: React.FC<Props> = ({ onClose }) => {
           <button onClick={onClose} className="hover:bg-indigo-500 p-1 rounded"><X size={20} /></button>
         </div>
 
-        <div className="p-5 space-y-4">
+        <div className="p-5 space-y-4 overflow-y-auto">
+          {/* Logo Upload */}
+          <div>
+            <label className="text-xs font-bold text-gray-500 block mb-2">学校ロゴ</label>
+            <div className="flex items-center gap-4">
+              <div
+                className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 cursor-pointer hover:bg-gray-100 overflow-hidden"
+                onClick={() => logoRef.current?.click()}
+              >
+                {form.logoBase64
+                  ? <img src={form.logoBase64} className="w-full h-full object-contain p-1" />
+                  : <Image size={32} className="text-gray-300" />}
+              </div>
+              <div className="flex-1">
+                <button
+                  type="button"
+                  onClick={() => logoRef.current?.click()}
+                  className="flex items-center gap-2 text-sm border rounded px-3 py-1.5 hover:bg-gray-50"
+                >
+                  <Upload size={14} /> ロゴをアップロード
+                </button>
+                {form.logoBase64 && (
+                  <button
+                    type="button"
+                    onClick={() => handleChange('logoBase64', '')}
+                    className="mt-2 text-xs text-red-500 hover:text-red-700"
+                  >
+                    削除
+                  </button>
+                )}
+                <p className="text-xs text-gray-400 mt-1">PNG / JPG 推奨</p>
+              </div>
+            </div>
+            <input
+              type="file"
+              ref={logoRef}
+              className="hidden"
+              accept="image/*"
+              onChange={e => e.target.files?.[0] && handleLogoUpload(e.target.files[0])}
+            />
+          </div>
+
           <div>
             <label className="text-xs font-bold text-gray-500 block mb-1">学校名 *</label>
             <input
@@ -100,6 +152,16 @@ const SchoolSettingsModal: React.FC<Props> = ({ onClose }) => {
               onChange={e => handleChange('email', e.target.value)}
               className="w-full border rounded p-2 text-sm"
               placeholder="例: info@school.jp"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-gray-500 block mb-1">住居地デフォルト（入管届出用）</label>
+            <input
+              value={form.defaultResidence || ''}
+              onChange={e => handleChange('defaultResidence', e.target.value)}
+              className="w-full border rounded p-2 text-sm"
+              placeholder="例: 東京都新宿区〇〇 1-2-3（学生の住居地が未入力の場合に使用）"
             />
           </div>
 

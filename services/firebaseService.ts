@@ -47,6 +47,10 @@ export async function fetchStudents(schoolId: string = 'default'): Promise<Stude
 }
 
 export async function saveStudent(student: Student, schoolId: string = 'default'): Promise<void> {
+  // 画像を圧縮（1MB以下に）
+  if (student.photoBase64 && student.photoBase64.length > 800000) {
+    student = { ...student, photoBase64: await compressImage(student.photoBase64) };
+  }
   if (!USE_FIREBASE) {
     const all = getStoredStudents();
     const idx = all.findIndex(s => s.id === student.id);
@@ -112,6 +116,35 @@ export async function saveUser(user: User, schoolId: string = 'default'): Promis
   const { db } = await getFirebase();
   const { doc, setDoc } = await import('firebase/firestore');
   await setDoc(doc(db, 'users', `${schoolId}_${user.username}`), { ...user, schoolId });
+}
+
+// ─── Image Utilities ──────────────────────────────────────────
+
+async function compressImage(base64: string): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let { width, height } = img;
+      // 最大800px
+      const maxSize = 800;
+      if (width > maxSize || height > maxSize) {
+        if (width > height) {
+          height = Math.round(height * maxSize / width);
+          width = maxSize;
+        } else {
+          width = Math.round(width * maxSize / height);
+          height = maxSize;
+        }
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', 0.7));
+    };
+    img.src = base64;
+  });
 }
 
 // ─── Auth Operations ──────────────────────────────────────────

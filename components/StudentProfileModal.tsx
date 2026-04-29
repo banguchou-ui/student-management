@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Student, CounselingRecord } from '../types';
-import { X, FileText, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { Student, CounselingRecord, TuitionStatus } from '../types';
+import { X, FileText, CheckCircle, XCircle, AlertTriangle, Printer, Mail } from 'lucide-react';
 import CertificateModal, { CertType } from './CertificateModal';
+import { loadSchoolSettings } from './SchoolSettingsModal';
+import { sendTuitionReminder } from '../utils/sendEmail';
 
 interface StudentProfileModalProps {
   student: Student | null;
@@ -46,6 +48,8 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onCl
   const [activeTab, setActiveTab] = useState<TabId>('basic');
   const [newLogSummary, setNewLogSummary] = useState('');
   const [newLogTeacher, setNewLogTeacher] = useState('');
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailResult, setEmailResult] = useState<{ ok: boolean; msg: string } | null>(null);
 
   if (!student) return null;
 
@@ -66,107 +70,250 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onCl
 
   // --- Immigration Report View (A4) ---
   if (reportMode) {
+    const settings = loadSchoolSettings();
+    const today = new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
     return (
-      <div className="fixed inset-0 bg-white z-[60] overflow-auto flex justify-center">
-        <div className="w-[210mm] min-h-[297mm] p-12 bg-white shadow-none print:shadow-none relative text-black">
-          <div className="absolute top-4 right-4 no-print flex gap-2">
-            <button onClick={handlePrint} className="bg-blue-600 text-white px-4 py-2 rounded">印刷 (Print)</button>
-            <button onClick={() => setReportMode(false)} className="bg-gray-200 text-gray-700 px-4 py-2 rounded">閉じる</button>
-          </div>
-          <h1 className="text-2xl font-serif text-center mb-8 border-b-2 border-black pb-4">留学生管理台帳 (入管提出用)</h1>
-          <div className="flex gap-6 mb-8">
-            <div className="w-32 h-40 border border-black flex items-center justify-center overflow-hidden">
-              {student.photoBase64
-                ? <img src={student.photoBase64} className="w-full h-full object-cover" style={{ transform: `scale(${student.photoTransform?.scale}) translate(${student.photoTransform?.x}px, ${student.photoTransform?.y}px)` }} />
-                : '写真'}
+      <div className="fixed inset-0 bg-gray-800 z-[60] overflow-auto">
+        <style>{`
+          @media print {
+            .no-print { display: none !important; }
+            body { margin: 0; }
+          }
+          @page { size: A4 portrait; margin: 15mm; }
+        `}</style>
+
+        {/* Toolbar */}
+        <div className="no-print sticky top-0 z-10 bg-gray-900 text-white px-6 py-3 flex items-center gap-3">
+          <button onClick={() => window.print()} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-bold">
+            <Printer size={15} /> 印刷
+          </button>
+          <button onClick={() => setReportMode(false)} className="flex items-center gap-2 bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded text-sm">
+            閉じる
+          </button>
+          <span className="text-gray-400 text-xs ml-2">入管局提出用 — 留学生管理台帳</span>
+        </div>
+
+        {/* A4 Document */}
+        <div className="flex justify-center py-8 px-4">
+          <div className="w-[210mm] bg-white text-black shadow-2xl" style={{ minHeight: '297mm', padding: '15mm 18mm', boxSizing: 'border-box', fontFamily: 'serif' }}>
+
+            {/* Document Header */}
+            <div className="text-center border-b-4 border-double border-gray-800 pb-5 mb-6">
+              {settings.logoBase64 && (
+                <img src={settings.logoBase64} className="h-12 mx-auto mb-2 object-contain" alt="logo" />
+              )}
+              <h1 className="text-2xl font-bold tracking-widest">留 学 生 管 理 台 帳</h1>
+              <p className="text-sm text-gray-500 mt-1">入国管理局 提出用書類</p>
             </div>
-            <div className="flex-1 space-y-3 font-serif">
-              <div className="flex justify-between border-b border-gray-300 pb-1">
-                <span className="w-1/2">氏名: <strong>{student.name}</strong></span>
-                <span className="w-1/2">学籍番号: {student.studentId}</span>
-              </div>
-              <div className="flex justify-between border-b border-gray-300 pb-1">
-                <span className="w-1/2">国籍: {student.nationality}</span>
-                <span className="w-1/4">性別: {student.gender}</span>
-                <span className="w-1/4">年齢: {student.age}</span>
-              </div>
-              <div className="flex justify-between border-b border-gray-300 pb-1">
-                <span className="w-1/2">在留カード番号: {student.zairyuCardNumber}</span>
-                <span className="w-1/2">在留期限: {student.visaExpiry}</span>
-              </div>
-              <div className="border-b border-gray-300 pb-1">
-                <span>住所: {student.workInfo.address || '学校寮'}</span>
-              </div>
-              <div className="border-b border-gray-300 pb-1">
-                <span>通学方法: {student.commuteMethod} (自転車登録: {student.bikeRegNumber})</span>
+
+            {/* School Info */}
+            <div className="mb-5 text-sm border border-gray-300 rounded p-3 bg-gray-50">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+                <div><span className="text-gray-500 w-20 inline-block">学校名:</span> <strong>{settings.schoolName}</strong></div>
+                <div><span className="text-gray-500 w-20 inline-block">電話番号:</span> {settings.phone || '—'}</div>
+                <div><span className="text-gray-500 w-20 inline-block">住所:</span> {settings.schoolAddress}</div>
+                <div><span className="text-gray-500 w-20 inline-block">校長名:</span> {settings.principalName || '—'}</div>
+                <div><span className="text-gray-500 w-20 inline-block">作成日:</span> {today}</div>
               </div>
             </div>
-          </div>
-          <table className="w-full border-collapse border border-black mb-8 font-serif text-sm">
-            <tbody>
-              <tr>
-                <th className="border border-black p-2 bg-gray-100 w-1/4">出席率</th>
-                <td className="border border-black p-2">{student.attendanceRate}% (先月: {student.attendanceLastMonth}%)</td>
-                <th className="border border-black p-2 bg-gray-100 w-1/4">クラス/年次</th>
-                <td className="border border-black p-2">{student.className} / {student.grade}</td>
-              </tr>
-              <tr>
-                <th className="border border-black p-2 bg-gray-100">成績 (GPA)</th>
-                <td className="border border-black p-2">{student.academicInfo.gpa} (単位修得: {student.academicInfo.creditsEarned ? '済' : '未'})</td>
-                <th className="border border-black p-2 bg-gray-100">JLPT</th>
-                <td className="border border-black p-2">{student.jlptLevel}</td>
-              </tr>
-              <tr>
-                <th className="border border-black p-2 bg-gray-100">アルバイト</th>
-                <td className="border border-black p-2" colSpan={3}>
-                  {student.workInfo.location
-                    ? `${student.workInfo.location} (${student.workInfo.jobTitle}) - 週${student.workInfo.hoursPerWeek}時間`
-                    : 'なし'}
-                </td>
-              </tr>
-              <tr>
-                <th className="border border-black p-2 bg-gray-100">進路希望</th>
-                <td className="border border-black p-2" colSpan={3}>
-                  {student.jobHuntingStatus} {student.targetCompany && `(${student.targetCompany})`}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <h3 className="font-bold mb-2 font-serif">指導・面談履歴</h3>
-          <div className="border border-black min-h-[200px] p-4 text-sm font-serif mb-4">
-            {student.warningHistory.length > 0 && (
-              <div className="mb-4">
-                <p className="font-bold underline">違反・指導:</p>
-                <ul className="list-disc pl-5">
-                  {student.warningHistory.map(w => <li key={w.id}>{w.date} [{w.level}] {w.reason}</li>)}
-                </ul>
+
+            {/* Photo + Basic Info */}
+            <div className="flex gap-6 mb-6">
+              <div className="w-28 h-36 border-2 border-gray-400 flex items-center justify-center overflow-hidden shrink-0 bg-gray-100 text-xs text-gray-400">
+                {student.photoBase64
+                  ? <img src={student.photoBase64} className="w-full h-full object-cover" style={{ transform: `scale(${student.photoTransform?.scale ?? 1}) translate(${student.photoTransform?.x ?? 0}px, ${student.photoTransform?.y ?? 0}px)` }} />
+                  : '写真'}
+              </div>
+              <div className="flex-1">
+                <h2 className="text-base font-bold border-b border-gray-400 pb-1 mb-3">■ 学生基本情報</h2>
+                <table className="w-full text-sm border-collapse">
+                  <tbody>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left text-gray-500 font-medium py-1 w-32">氏名</th>
+                      <td className="py-1 font-bold text-base">{student.name}</td>
+                      <th className="text-left text-gray-500 font-medium py-1 w-28">学籍番号</th>
+                      <td className="py-1">{student.studentId}</td>
+                    </tr>
+                    {student.nameRomaji && (
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left text-gray-500 font-medium py-1">ローマ字氏名</th>
+                      <td className="py-1" colSpan={3}>{student.nameRomaji}</td>
+                    </tr>
+                    )}
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left text-gray-500 font-medium py-1">国籍</th>
+                      <td className="py-1">{student.nationality}</td>
+                      <th className="text-left text-gray-500 font-medium py-1">性別</th>
+                      <td className="py-1">{student.gender}</td>
+                    </tr>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left text-gray-500 font-medium py-1">生年月日</th>
+                      <td className="py-1">{student.birthDate || `${student.age}歳`}</td>
+                      <th className="text-left text-gray-500 font-medium py-1">年齢</th>
+                      <td className="py-1">{student.age} 歳</td>
+                    </tr>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left text-gray-500 font-medium py-1">在留カード番号</th>
+                      <td className="py-1">{student.zairyuCardNumber || '—'}</td>
+                      <th className="text-left text-gray-500 font-medium py-1">在留期限</th>
+                      <td className="py-1">{student.visaExpiry || '—'}</td>
+                    </tr>
+                    <tr>
+                      <th className="text-left text-gray-500 font-medium py-1">ビザ状況</th>
+                      <td className="py-1" colSpan={3}>{student.visaStatus}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Academic Info */}
+            <div className="mb-5">
+              <h2 className="text-base font-bold border-b border-gray-400 pb-1 mb-3">■ 学業情報</h2>
+              <table className="w-full text-sm border-collapse border border-gray-300">
+                <tbody>
+                  <tr>
+                    <th className="border border-gray-300 p-2 bg-gray-100 text-left w-1/4">クラス / 年次</th>
+                    <td className="border border-gray-300 p-2">{student.className} / {student.grade}</td>
+                    <th className="border border-gray-300 p-2 bg-gray-100 text-left w-1/4">入学日</th>
+                    <td className="border border-gray-300 p-2">{student.enrollmentDate || '—'}</td>
+                  </tr>
+                  <tr>
+                    <th className="border border-gray-300 p-2 bg-gray-100 text-left">出席率（当月）</th>
+                    <td className="border border-gray-300 p-2">{student.attendanceRate}%</td>
+                    <th className="border border-gray-300 p-2 bg-gray-100 text-left">出席率（前月）</th>
+                    <td className="border border-gray-300 p-2">{student.attendanceLastMonth}%</td>
+                  </tr>
+                  <tr>
+                    <th className="border border-gray-300 p-2 bg-gray-100 text-left">GPA</th>
+                    <td className="border border-gray-300 p-2">{student.academicInfo.gpa} / 4.0</td>
+                    <th className="border border-gray-300 p-2 bg-gray-100 text-left">JLPT</th>
+                    <td className="border border-gray-300 p-2">{student.jlptLevel}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Life Info */}
+            <div className="mb-5">
+              <h2 className="text-base font-bold border-b border-gray-400 pb-1 mb-3">■ 生活情報</h2>
+              <table className="w-full text-sm border-collapse border border-gray-300">
+                <tbody>
+                  <tr>
+                    <th className="border border-gray-300 p-2 bg-gray-100 text-left w-1/4">居住形態</th>
+                    <td className="border border-gray-300 p-2">{student.housingType}</td>
+                    <th className="border border-gray-300 p-2 bg-gray-100 text-left w-1/4">通学方法</th>
+                    <td className="border border-gray-300 p-2">{student.commuteMethod}</td>
+                  </tr>
+                  <tr>
+                    <th className="border border-gray-300 p-2 bg-gray-100 text-left">アルバイト先</th>
+                    <td className="border border-gray-300 p-2">{student.workInfo.location || 'なし'}</td>
+                    <th className="border border-gray-300 p-2 bg-gray-100 text-left">週労働時間</th>
+                    <td className="border border-gray-300 p-2">{student.workInfo.hoursPerWeek ? `${student.workInfo.hoursPerWeek} 時間` : '—'}</td>
+                  </tr>
+                  <tr>
+                    <th className="border border-gray-300 p-2 bg-gray-100 text-left">就活状況</th>
+                    <td className="border border-gray-300 p-2" colSpan={3}>
+                      {student.jobHuntingStatus} {student.targetCompany && `(${student.targetCompany})`}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Guidance & Counseling */}
+            <div className="mb-5">
+              <h2 className="text-base font-bold border-b border-gray-400 pb-1 mb-3">■ 指導歴・面談記録</h2>
+              {student.warningHistory.length > 0 && (
+                <div className="mb-3">
+                  <p className="text-sm font-bold text-gray-700 mb-1">違反・指導履歴:</p>
+                  <table className="w-full text-xs border-collapse border border-gray-300">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        <th className="border border-gray-300 p-1.5 text-left">日付</th>
+                        <th className="border border-gray-300 p-1.5 text-left">レベル</th>
+                        <th className="border border-gray-300 p-1.5 text-left">内容</th>
+                        <th className="border border-gray-300 p-1.5 text-left">署名</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {student.warningHistory.map(w => (
+                        <tr key={w.id}>
+                          <td className="border border-gray-300 p-1.5">{w.date}</td>
+                          <td className="border border-gray-300 p-1.5">{w.level}</td>
+                          <td className="border border-gray-300 p-1.5">{w.reason}</td>
+                          <td className="border border-gray-300 p-1.5">{w.signed ? '済' : '未'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <p className="text-sm font-bold text-gray-700 mb-1">面談記録:</p>
+              {student.counselingRecords.length > 0 ? (
+                <table className="w-full text-xs border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border border-gray-300 p-1.5 text-left">日付</th>
+                      <th className="border border-gray-300 p-1.5 text-left">担当</th>
+                      <th className="border border-gray-300 p-1.5 text-left">内容</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {student.counselingRecords.map(r => (
+                      <tr key={r.id}>
+                        <td className="border border-gray-300 p-1.5 whitespace-nowrap">{r.date}</td>
+                        <td className="border border-gray-300 p-1.5 whitespace-nowrap">{r.teacherName}</td>
+                        <td className="border border-gray-300 p-1.5">{r.summary}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="text-sm text-gray-400 border border-gray-200 p-3 rounded">記録なし</p>
+              )}
+            </div>
+
+            {/* Zairyu Card Images */}
+            {(student.zairyuCardFront || student.zairyuCardBack) && (
+              <div className="mb-5">
+                <h2 className="text-base font-bold border-b border-gray-400 pb-1 mb-3">■ 在留カード</h2>
+                <div className="flex gap-4">
+                  <div className="flex-1 border border-gray-400 h-24 flex items-center justify-center relative overflow-hidden text-xs text-gray-400">
+                    {student.zairyuCardFront
+                      ? <img src={student.zairyuCardFront} className="w-full h-full object-contain" />
+                      : '在留カード（表）未登録'}
+                  </div>
+                  <div className="flex-1 border border-gray-400 h-24 flex items-center justify-center relative overflow-hidden text-xs text-gray-400">
+                    {student.zairyuCardBack
+                      ? <img src={student.zairyuCardBack} className="w-full h-full object-contain" />
+                      : '在留カード（裏）未登録'}
+                  </div>
+                </div>
               </div>
             )}
-            <p className="font-bold underline">面談記録:</p>
-            {student.counselingRecords.length > 0
-              ? <ul className="list-disc pl-5">{student.counselingRecords.map(r => <li key={r.id}>{r.date} ({r.teacherName}): {r.summary}</li>)}</ul>
-              : <span className="text-gray-400">記録なし</span>}
-          </div>
-          <div className="flex gap-4 h-32 mt-4">
-            <div className="flex-1 border border-black p-2 text-xs text-gray-500 relative">
-              在留カード(表)
-              {student.zairyuCardFront && <img src={student.zairyuCardFront} className="absolute inset-0 w-full h-full object-contain p-2" />}
+
+            {/* Signature */}
+            <div className="mt-10 pt-6 border-t-2 border-gray-400">
+              <div className="flex justify-between items-end">
+                <div className="text-sm space-y-2">
+                  <p>報告日: {today}</p>
+                  <p>学校名: {settings.schoolName}</p>
+                  <p>校　長: {settings.principalName || '____________________'}　（印）</p>
+                  <p>担当者: ____________________　（印）</p>
+                </div>
+                <div className="w-20 h-20 border-2 border-gray-600 flex items-center justify-center text-xs text-gray-400">
+                  学校印
+                </div>
+              </div>
             </div>
-            <div className="flex-1 border border-black p-2 text-xs text-gray-500 relative">
-              在留カード(裏)
-              {student.zairyuCardBack && <img src={student.zairyuCardBack} className="absolute inset-0 w-full h-full object-contain p-2" />}
-            </div>
-          </div>
-          <div className="mt-8 text-right font-serif text-sm">
-            <p>作成日: {new Date().toLocaleDateString()}</p>
-            <p>作成者: ______________________ (印)</p>
           </div>
         </div>
       </div>
     );
   }
 
-  // --- Certificate Preview ---
+    // --- Certificate Preview ---
   if (certType) {
     return <CertificateModal student={student} type={certType} onClose={() => setCertType(null)} />;
   }
@@ -190,6 +337,9 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onCl
             </div>
           </div>
           <div className="flex gap-1.5 items-center">
+            <button onClick={handlePrint} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 text-white rounded hover:bg-emerald-800 transition text-xs">
+              <Printer size={14} /> 個票印刷
+            </button>
             <button onClick={() => setReportMode(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 text-white rounded hover:bg-black transition text-xs">
               <FileText size={14} /> 入管報告書
             </button>
@@ -239,9 +389,11 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onCl
                 </div>
               </div>
               <Row label="氏名" value={student.name} />
+              {student.nameRomaji && <Row label="ローマ字氏名" value={student.nameRomaji} />}
               <Row label="学籍番号" value={student.studentId} />
               <Row label="性別" value={student.gender} />
               <Row label="年齢" value={`${student.age} 歳`} />
+              <Row label="生年月日" value={student.birthDate || undefined} />
               <Row label="国籍" value={student.nationality} />
               <Row label="母語" value={student.motherTongue} />
               <Row label="入学日" value={student.enrollmentDate} />
@@ -274,6 +426,50 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onCl
               <Row label="学費状況" value={student.tuitionStatus} />
               <Row label="残金" value={student.tuitionBalance !== undefined ? `¥${student.tuitionBalance.toLocaleString()}` : undefined} />
               <Row label="次回納付期限" value={student.nextTuitionDeadline} />
+
+              {(student.tuitionStatus === TuitionStatus.UNPAID || student.tuitionStatus === TuitionStatus.PARTIAL) && (
+                <div className="mt-3">
+                  <button
+                    onClick={async () => {
+                      setEmailSending(true);
+                      setEmailResult(null);
+                      try {
+                        const settings = loadSchoolSettings();
+                        await sendTuitionReminder(student, settings);
+                        setEmailResult({ ok: true, msg: `${student.emergencyContact?.email ?? ''} に送信しました` });
+                      } catch (e: any) {
+                        setEmailResult({ ok: false, msg: e.message });
+                      } finally {
+                        setEmailSending(false);
+                      }
+                    }}
+                    disabled={emailSending}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50 transition font-bold"
+                  >
+                    <Mail size={13} /> {emailSending ? '送信中...' : '催促メール送信'}
+                  </button>
+                  {emailResult && (
+                    <p className={`text-xs mt-1.5 ${emailResult.ok ? 'text-green-600' : 'text-red-600'}`}>
+                      {emailResult.ok ? '✓ ' : '✗ '}{emailResult.msg}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {(student.tuitionHistory?.length ?? 0) > 0 && (
+                <div className="mt-3">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">納付履歴</p>
+                  <div className="space-y-1">
+                    {student.tuitionHistory.map((entry, i) => (
+                      <div key={i} className="flex justify-between text-xs bg-gray-50 px-3 py-1.5 rounded">
+                        <span className="text-gray-500">{entry.date}</span>
+                        <span className="font-bold text-green-700">¥{entry.amount.toLocaleString()}</span>
+                        <span className="text-gray-500">{entry.note}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-4 mb-2">銀行情報</p>
               <Row label="銀行名" value={student.bankInfo.bankName || '未登録'} />
@@ -318,6 +514,14 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onCl
                   </div>
                 ))}
               </div>
+
+              {(student.withdrawalDate || student.withdrawalReason) && (
+                <>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-4 mb-2">退学情報</p>
+                  <Row label="退学日" value={student.withdrawalDate} />
+                  <Row label="退学理由" value={student.withdrawalReason} />
+                </>
+              )}
             </div>
           )}
 

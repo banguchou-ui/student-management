@@ -45,10 +45,12 @@ export const INITIAL_STUDENT_STATE: Student = {
   id: '',
   studentId: '',
   name: '',
+  nameRomaji: '',
   gender: Gender.MALE,
   nationality: '',
   motherTongue: '',
   age: 18,
+  birthDate: '',
   enrollmentDate: '',
   className: '',
   grade: '',
@@ -75,12 +77,15 @@ export const INITIAL_STUDENT_STATE: Student = {
   tuitionPaid: 0,
   tuitionBalance: 0,
   nextTuitionDeadline: '',
+  tuitionHistory: [],
   bankInfo: { bankName: '', branchName: '', accountNumber: '', accountHolder: '' }, // New
 
   jobHuntingStatus: JobHuntingStatus.NOT_STARTED,
   targetCompany: '',
   careerMilestones: { resumeComplete: false, interviewTraining: false, jobOffer: false, visaChangeApplied: false }, // New
   exitInfo: { companyName: '', addressAfterLeaving: '', visaChangeType: '' }, // New
+  withdrawalDate: '',
+  withdrawalReason: '',
 
   commuteMethod: CommuteMethod.WALK,
   bikeRegNumber: '',

@@ -169,10 +169,12 @@ export interface Student {
   id: string;
   studentId: string;
   name: string;
+  nameRomaji: string;
   gender: Gender;
   nationality: string;
   motherTongue: string;
   age: number;
+  birthDate: string;
   enrollmentDate: string;
   className: string;
   grade: string;
@@ -202,6 +204,7 @@ export interface Student {
   tuitionPaid: number;
   tuitionBalance?: number; // New: Manually modifiable balance
   nextTuitionDeadline: string;
+  tuitionHistory: { date: string; amount: number; note: string; }[];
   bankInfo: BankInfo; // New
 
   // Career / Job Hunting
@@ -209,7 +212,9 @@ export interface Student {
   targetCompany: string;
   careerMilestones: CareerMilestones; // New
   exitInfo: ExitInfo; // New
-  
+  withdrawalDate: string;
+  withdrawalReason: string;
+
   // Life & Housing
   commuteMethod: CommuteMethod;
   bikeRegNumber: string;
@@ -239,7 +244,8 @@ export interface FilterState {
   jlptLevel: string;
   tuitionStatus: string;
   hasJob: string;
-  className: string; // New filter
+  className: string;
+  noPhoto: string;
 }
 
 export interface User {

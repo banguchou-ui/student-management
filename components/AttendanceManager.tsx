@@ -32,7 +32,7 @@ const STATUS_CONFIG = {
 
 type StatusType = keyof typeof STATUS_CONFIG;
 
-const AttendanceManager: React.FC<AttendanceManagerProps> = ({ students }) => {
+const AttendanceManager: React.FC<AttendanceManagerProps> = ({ students, onUpdateStudent }) => {
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
@@ -82,6 +82,20 @@ const AttendanceManager: React.FC<AttendanceManagerProps> = ({ students }) => {
     }
     setAttendance(updated);
     saveAttendance(updated);
+
+    // 当月出席率を再計算して学生データに反映
+    const student = students.find(s => s.id === studentId);
+    if (student) {
+      const records = updated[studentId] || {};
+      let presentCount = 0;
+      daysInMonth.forEach(d => {
+        const s = records[dateKey(d)];
+        if (s === 'present' || s === 'excused') presentCount++;
+      });
+      const total = daysInMonth.length;
+      const newRate = total > 0 ? Math.round((presentCount / total) * 100) : 0;
+      onUpdateStudent({ ...student, attendanceRate: newRate });
+    }
   };
 
   const getMonthStats = (studentId: string) => {

@@ -1,20 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Plus, Trash2, Pin, AlertCircle, Info, CheckCircle, X } from 'lucide-react';
-
-interface Notice {
-  id: string;
-  title: string;
-  content: string;
-  type: 'info' | 'warning' | 'success' | 'urgent';
-  pinned: boolean;
-  createdAt: string;
-  createdBy: string;
-  expiresAt?: string;
-}
+import { Bell, Plus, Trash2, Pin, AlertCircle, Info, CheckCircle, RefreshCw } from 'lucide-react';
+import { Student } from '../types';
+import { generateAutoNotices, Notice } from '../utils/autoNotify';
 
 interface NoticeManagerProps {
   currentUserName: string;
   canEdit: boolean;
+  students: Student[];
 }
 
 const NOTICE_KEY = 'sms_notices_v1';
@@ -26,10 +18,11 @@ const TYPE_CONFIG = {
   urgent: { label: '緊急', color: 'bg-red-50 border-red-300 text-red-800', icon: AlertCircle, iconColor: 'text-red-500' },
 };
 
-const NoticeManager: React.FC<NoticeManagerProps> = ({ currentUserName, canEdit }) => {
+const NoticeManager: React.FC<NoticeManagerProps> = ({ currentUserName, canEdit, students }) => {
   const [notices, setNotices] = useState<Notice[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: '', content: '', type: 'info' as Notice['type'], expiresAt: '' });
+  const [autoUpdated, setAutoUpdated] = useState(false);
 
   useEffect(() => {
     try {
@@ -41,6 +34,15 @@ const NoticeManager: React.FC<NoticeManagerProps> = ({ currentUserName, canEdit 
   const save = (updated: Notice[]) => {
     setNotices(updated);
     localStorage.setItem(NOTICE_KEY, JSON.stringify(updated));
+  };
+
+  const handleAutoNotify = () => {
+    const autoNotices = generateAutoNotices(students);
+    // Keep manual notices (no 🤖 prefix in createdBy), replace auto ones
+    const manual = notices.filter(n => n.createdBy !== 'システム自動通知');
+    save([...autoNotices, ...manual]);
+    setAutoUpdated(true);
+    setTimeout(() => setAutoUpdated(false), 3000);
   };
 
   const addNotice = () => {
@@ -72,12 +74,16 @@ const NoticeManager: React.FC<NoticeManagerProps> = ({ currentUserName, canEdit 
     .filter(n => !n.expiresAt || new Date(n.expiresAt) > new Date())
     .sort((a, b) => {
       if (a.pinned !== b.pinned) return b.pinned ? 1 : -1;
+      if (a.type === 'urgent' && b.type !== 'urgent') return -1;
+      if (b.type === 'urgent' && a.type !== 'urgent') return 1;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
+  const autoCount = sortedNotices.filter(n => n.createdBy === 'システム自動通知').length;
+
   return (
     <div className="flex flex-col h-full bg-gray-50">
-      <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+      <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <Bell size={20} className="text-indigo-600" />
           <h2 className="font-bold text-gray-800">お知らせ・掲示板</h2>
@@ -86,15 +92,31 @@ const NoticeManager: React.FC<NoticeManagerProps> = ({ currentUserName, canEdit 
               緊急 {sortedNotices.filter(n => n.type === 'urgent').length}件
             </span>
           )}
+          {autoCount > 0 && (
+            <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded-full border border-yellow-300">
+              🤖 自動 {autoCount}件
+            </span>
+          )}
         </div>
-        {canEdit && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700"
-          >
-            <Plus size={14} /> 新規投稿
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {canEdit && (
+            <button
+              onClick={handleAutoNotify}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm transition font-medium border ${autoUpdated ? 'bg-green-50 text-green-700 border-green-300' : 'bg-gray-50 text-gray-600 hover:bg-yellow-50 hover:text-yellow-700 hover:border-yellow-300 border-gray-200'}`}
+            >
+              <RefreshCw size={13} className={autoUpdated ? '' : ''} />
+              {autoUpdated ? '更新しました ✓' : '自動通知を更新'}
+            </button>
+          )}
+          {canEdit && (
+            <button
+              onClick={() => setShowForm(true)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700"
+            >
+              <Plus size={14} /> 新規投稿
+            </button>
+          )}
+        </div>
       </div>
 
       {/* New Notice Form */}
@@ -151,21 +173,30 @@ const NoticeManager: React.FC<NoticeManagerProps> = ({ currentUserName, canEdit 
         {sortedNotices.length === 0 && (
           <div className="text-center py-16 text-gray-400">
             <Bell size={48} className="mx-auto mb-4 opacity-30" />
-            <p>お知らせはありません</p>
+            <p className="mb-2">お知らせはありません</p>
+            {canEdit && (
+              <button onClick={handleAutoNotify} className="text-sm text-indigo-500 underline">
+                自動通知を生成する
+              </button>
+            )}
           </div>
         )}
         {sortedNotices.map(notice => {
           const cfg = TYPE_CONFIG[notice.type];
           const Icon = cfg.icon;
+          const isAuto = notice.createdBy === 'システム自動通知';
           return (
             <div key={notice.id} className={`rounded-lg border-2 p-4 ${cfg.color} relative`}>
               {notice.pinned && (
-                <span className="absolute top-2 right-2 text-xs bg-gray-700 text-white px-2 py-0.5 rounded-full">📌 固定</span>
+                <span className="absolute top-2 right-12 text-xs bg-gray-700 text-white px-2 py-0.5 rounded-full">📌 固定</span>
+              )}
+              {isAuto && (
+                <span className="absolute top-2 right-2 text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded border border-gray-200">🤖 自動</span>
               )}
               <div className="flex items-start gap-3">
                 <Icon size={20} className={`mt-0.5 shrink-0 ${cfg.iconColor}`} />
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className="font-bold text-sm">{notice.title}</span>
                     <span className={`text-xs px-1.5 py-0.5 rounded font-bold ${notice.type === 'urgent' ? 'bg-red-500 text-white' : 'bg-white/60'}`}>
                       {cfg.label}
@@ -179,10 +210,12 @@ const NoticeManager: React.FC<NoticeManagerProps> = ({ currentUserName, canEdit 
                   </div>
                 </div>
                 {canEdit && (
-                  <div className="flex gap-1 shrink-0">
-                    <button onClick={() => togglePin(notice.id)} className="p-1.5 rounded hover:bg-white/50" title="固定">
-                      <Pin size={14} className={notice.pinned ? 'fill-current' : ''} />
-                    </button>
+                  <div className="flex gap-1 shrink-0 mt-4">
+                    {!isAuto && (
+                      <button onClick={() => togglePin(notice.id)} className="p-1.5 rounded hover:bg-white/50" title="固定">
+                        <Pin size={14} className={notice.pinned ? 'fill-current' : ''} />
+                      </button>
+                    )}
                     <button onClick={() => deleteNotice(notice.id)} className="p-1.5 rounded hover:bg-white/50 text-red-500" title="削除">
                       <Trash2 size={14} />
                     </button>
