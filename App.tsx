@@ -51,7 +51,7 @@ const App: React.FC = () => {
   const [lang, setLangState] = useState<Lang>(getLang);
 
   const toggleLang = () => {
-    const next: Lang = lang === 'ja' ? 'zh' : 'ja';
+    const next: Lang = lang === 'ja' ? 'en' : 'ja';
     setLang(next);
     setLangState(next);
   };

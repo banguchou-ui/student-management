@@ -1,12 +1,12 @@
 import { createContext, useContext } from 'react';
 
-export type Lang = 'ja' | 'zh';
+export type Lang = 'ja' | 'en';
 
 const LANG_KEY = 'sms_lang';
 
 export const getLang = (): Lang => {
   const stored = localStorage.getItem(LANG_KEY);
-  return stored === 'zh' ? 'zh' : 'ja';
+  return stored === 'en' ? 'en' : 'ja';
 };
 
 export const setLang = (lang: Lang) => {
@@ -19,7 +19,7 @@ export const useLang = () => useContext(LangContext);
 
 // ── Translation function ─────────────────────────────────────────
 export const t = (key: keyof typeof ja, lang: Lang): string =>
-  (lang === 'zh' ? zh[key] : ja[key]) ?? key;
+  (lang === 'en' ? en[key] : ja[key]) ?? key;
 
 // Use this hook inside components: const { tr } = useTr();
 export const useTr = () => {
@@ -46,7 +46,7 @@ const ja = {
   delete: '削除',
   close: '閉じる',
   print: '印刷',
-  langToggle: '中文',
+  langToggle: 'EN',
 
   // Dashboard
   totalStudents: '在籍学生',
@@ -84,61 +84,61 @@ const ja = {
   longVacation: '長期休暇',
 };
 
-const zh: typeof ja = {
+const en: typeof ja = {
   // Header Nav
-  studentManagement: '学生管理',
-  attendanceManagement: '出勤管理',
-  notices: '公告栏',
+  studentManagement: 'Students',
+  attendanceManagement: 'Attendance',
+  notices: 'Notices',
 
   // Buttons
-  addStudent: '新建学生',
-  importCSV: '导入CSV',
-  exportExcel: '导出Excel',
-  userManagement: '用户管理',
-  schoolSettings: '学校设置',
-  logout: '退出登录',
-  save: '保存',
-  cancel: '取消',
-  delete: '删除',
-  close: '关闭',
-  print: '打印',
+  addStudent: 'New Student',
+  importCSV: 'Import CSV',
+  exportExcel: 'Export Excel',
+  userManagement: 'User Mgmt',
+  schoolSettings: 'School Settings',
+  logout: 'Log Out',
+  save: 'Save',
+  cancel: 'Cancel',
+  delete: 'Delete',
+  close: 'Close',
+  print: 'Print',
   langToggle: '日本語',
 
   // Dashboard
-  totalStudents: '在籍学生数',
-  lowAttendance: '出勤率80%以下',
-  unpaidTuition: '学费未缴',
-  visaExpiring: '签证90天内到期',
-  overworked: '超时劳动',
-  jobHunting: '求职中',
-  jobOffer: '已获内定',
-  hasWarning: '有指导记录',
-  noPhoto: '无照片',
+  totalStudents: 'Students',
+  lowAttendance: 'Attendance < 80%',
+  unpaidTuition: 'Unpaid Tuition',
+  visaExpiring: 'Visa Expiring',
+  overworked: 'Overworked',
+  jobHunting: 'Job Hunting',
+  jobOffer: 'Offer Received',
+  hasWarning: 'Has Warning',
+  noPhoto: 'No Photo',
 
   // Table Headers
-  colStudentInfo: '学生信息',
-  colAcademic: '学业・出勤',
-  colFinanceVisa: '学费・签证',
-  colStatus: '状态・警报',
-  colActions: '操作',
+  colStudentInfo: 'Student Info',
+  colAcademic: 'Academic',
+  colFinanceVisa: 'Finance / Visa',
+  colStatus: 'Status / Alert',
+  colActions: 'Actions',
 
   // Filters
-  searchPlaceholder: '按姓名或学籍编号搜索...',
-  allNationalities: '全部国籍',
-  allJLPT: '全部JLPT',
-  allTuition: '全部学费状态',
-  classPlaceholder: '班级',
+  searchPlaceholder: 'Search by name or ID...',
+  allNationalities: 'All Nationalities',
+  allJLPT: 'All JLPT',
+  allTuition: 'All Tuition Status',
+  classPlaceholder: 'Class',
 
   // Safety mode
-  safetyModeLabel: '安全确认',
-  scannerLabel: '扫码',
+  safetyModeLabel: 'Safety',
+  scannerLabel: 'Scan',
 
   // Common
-  noData: '暂无数据',
-  loading: '加载中...',
-  selected: ' 名已选',
-  longVacation: '长假模式',
+  noData: 'No data',
+  loading: 'Loading...',
+  selected: ' selected',
+  longVacation: 'Long Vacation',
 };
 
-export { ja, zh };
+export { ja, en };
 export type TranslationKey = keyof typeof ja;
