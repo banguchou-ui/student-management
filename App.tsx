@@ -129,7 +129,7 @@ const App: React.FC = () => {
           setScanLog(prev => [{ id: cleanId, name: student.name, time, status: 'success' }, ...prev].slice(0, 10));
           // Here you would typically update the backend attendance record
       } else {
-          setScanLog(prev => [{ id: cleanId, name: '未登録カード', time, status: 'error' }, ...prev].slice(0, 10));
+          setScanLog(prev => [{ id: cleanId, name: tr('noData'), time, status: 'error' }, ...prev].slice(0, 10));
       }
   };
 
@@ -379,7 +379,7 @@ const App: React.FC = () => {
                   onClick={() => setActiveTab('stats')}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === 'stats' ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
                 >
-                  <BarChart2 size={15} /> 統計
+                  <BarChart2 size={15} /> {tr('statistics')}
                 </button>
               </nav>
             )}
@@ -389,7 +389,7 @@ const App: React.FC = () => {
                 onClick={() => setSafetyMode(!safetyMode)} 
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-full font-bold transition shadow-sm text-sm ${safetyMode ? 'bg-white text-red-700 animate-pulse' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
             >
-                <Siren size={16} /> {safetyMode ? `緊急モード (未確認: ${students.filter(s=>s.safetyStatus===SafetyStatus.UNKNOWN).length}名)` : '安否'}
+                <Siren size={16} /> {safetyMode ? `${tr('safetyModeLabel')} (${students.filter(s=>s.safetyStatus===SafetyStatus.UNKNOWN).length})` : tr('safetyModeLabel')}
             </button>
 
             {/* Scanner Mode Toggle */}
@@ -427,7 +427,7 @@ const App: React.FC = () => {
                    onClick={() => setShowToolsMenu(v => !v)}
                    className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-200 rounded transition"
                  >
-                   <Settings size={13} /> ツール <ChevronDown size={11} />
+                   <Settings size={13} /> {tr('tools')} <ChevronDown size={11} />
                  </button>
                  {showToolsMenu && (
                    <>
@@ -436,17 +436,17 @@ const App: React.FC = () => {
                        {/* Export group */}
                        {currentUser.permissions.canExportData && (
                          <>
-                           <div className="px-3 py-1.5 text-xs text-gray-400 font-semibold uppercase tracking-wide bg-gray-50 border-b border-gray-100">エクスポート</div>
+                           <div className="px-3 py-1.5 text-xs text-gray-400 font-semibold uppercase tracking-wide bg-gray-50 border-b border-gray-100">{tr('exportLabel')}</div>
                            <button onClick={() => { setShowToolsMenu(false); exportExcel(); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2.5">
-                             <FileSpreadsheet size={14} className="text-green-600" /> 学生一覧 Excel
+                             <FileSpreadsheet size={14} className="text-green-600" /> {tr('exportStudents')}
                            </button>
                            <button onClick={() => { setShowToolsMenu(false); handleImmigrationReport('roster'); }} className="w-full text-left px-4 py-2 hover:bg-indigo-50 flex items-center gap-2.5">
                              <ClipboardList size={14} className="text-indigo-600" />
-                             <span>在籍者名簿 <span className="text-xs text-gray-400">5/11月</span></span>
+                             <span>{tr('exportResidents')} <span className="text-xs text-gray-400">5/11月</span></span>
                            </button>
                            <button onClick={() => { setShowToolsMenu(false); handleImmigrationReport('admission'); }} className="w-full text-left px-4 py-2 hover:bg-orange-50 flex items-center gap-2.5">
                              <ClipboardList size={14} className="text-orange-500" />
-                             <span>入退学届出一覧</span>
+                             <span>{tr('exportAdmission')}</span>
                            </button>
                          </>
                        )}
@@ -454,31 +454,31 @@ const App: React.FC = () => {
                        {currentUser.permissions.canEditBasicInfo && (
                          <>
                            <div className="border-t border-gray-100" />
-                           <div className="px-3 py-1.5 text-xs text-gray-400 font-semibold uppercase tracking-wide bg-gray-50 border-b border-gray-100">インポート</div>
+                           <div className="px-3 py-1.5 text-xs text-gray-400 font-semibold uppercase tracking-wide bg-gray-50 border-b border-gray-100">{tr('importLabel')}</div>
                            <button onClick={() => { setShowToolsMenu(false); setShowImport(true); }} className="w-full text-left px-4 py-2 hover:bg-green-50 flex items-center gap-2.5">
-                             <Upload size={14} className="text-green-600" /> 一括インポート
+                             <Upload size={14} className="text-green-600" /> {tr('bulkImport')}
                            </button>
                          </>
                        )}
                        {/* Backup group */}
                        <div className="border-t border-gray-100" />
-                       <div className="px-3 py-1.5 text-xs text-gray-400 font-semibold uppercase tracking-wide bg-gray-50 border-b border-gray-100">バックアップ</div>
+                       <div className="px-3 py-1.5 text-xs text-gray-400 font-semibold uppercase tracking-wide bg-gray-50 border-b border-gray-100">{tr('backupLabel')}</div>
                        <button onClick={() => { setShowToolsMenu(false); backupData(); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2.5">
-                         <Database size={14} className="text-gray-500" /> バックアップ保存
+                         <Database size={14} className="text-gray-500" /> {tr('backupSave')}
                        </button>
                        <button onClick={() => { setShowToolsMenu(false); handleRestoreClick(); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2.5">
-                         <FileUp size={14} className="text-gray-500" /> バックアップから復元
+                         <FileUp size={14} className="text-gray-500" /> {tr('backupRestore')}
                        </button>
                        {/* Email / Danger */}
                        <div className="border-t border-gray-100" />
                        <button onClick={() => { setShowToolsMenu(false); setShowEmailSettings(true); }} className="w-full text-left px-4 py-2 hover:bg-blue-50 flex items-center gap-2.5">
-                         <Mail size={14} className="text-blue-500" /> メール設定
+                         <Mail size={14} className="text-blue-500" /> {tr('emailSettings')}
                        </button>
                        {currentUser.role === UserRole.PRINCIPAL && (
                          <>
                            <div className="border-t border-gray-100" />
                            <button onClick={() => { setShowToolsMenu(false); handleResetData(); }} className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 flex items-center gap-2.5">
-                             <Trash2 size={14} /> データ初期化
+                             <Trash2 size={14} /> {tr('dataReset')}
                            </button>
                          </>
                        )}
@@ -494,9 +494,9 @@ const App: React.FC = () => {
                  <button
                    onClick={() => setShowImmigrationMenu(v => !v)}
                    className="flex items-center gap-1 px-2 py-1.5 text-xs font-bold text-gray-600 hover:text-indigo-700 hover:bg-indigo-50 border border-gray-200 rounded transition"
-                   title="入管届出"
+                   title={tr('immigration')}
                  >
-                   <ClipboardList size={14} /> 入管届出 <ChevronDown size={12} />
+                   <ClipboardList size={14} /> {tr('immigration')} <ChevronDown size={12} />
                  </button>
                  {showImmigrationMenu && (
                    <>
@@ -504,12 +504,12 @@ const App: React.FC = () => {
                      <div className="absolute right-0 mt-1 w-52 bg-white border border-gray-200 rounded-lg shadow-lg z-40 overflow-hidden">
                        <button onClick={() => handleImmigrationReport('roster')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 flex items-center gap-2">
                          <FileSpreadsheet size={14} className="text-indigo-600" />
-                         <div><div className="font-medium">在籍者名簿</div><div className="text-xs text-gray-400">5月/11月 定期届出用</div></div>
+                         <div><div className="font-medium">{tr('rosterReport')}</div><div className="text-xs text-gray-400">{tr('rosterReportSub')}</div></div>
                        </button>
                        <div className="border-t border-gray-100" />
                        <button onClick={() => handleImmigrationReport('admission')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 flex items-center gap-2">
                          <FileSpreadsheet size={14} className="text-orange-500" />
-                         <div><div className="font-medium">入退学届出一覧</div><div className="text-xs text-gray-400">入退学から14日以内</div></div>
+                         <div><div className="font-medium">{tr('admissionReport')}</div><div className="text-xs text-gray-400">{tr('admissionReportSub')}</div></div>
                        </button>
                      </div>
                    </>
@@ -532,10 +532,10 @@ const App: React.FC = () => {
                    <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-40 overflow-hidden">
                      <div className="px-3 py-2 border-b border-gray-100 text-xs text-gray-500 truncate">{currentUser.name}</div>
                      <button onClick={() => { setShowUserMenu(false); setShowPwdModal(true); }} className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2">
-                       <Key size={14} className="text-gray-400" /> パスワード変更
+                       <Key size={14} className="text-gray-400" /> {tr('passwordChange')}
                      </button>
                      <button onClick={() => { setShowUserMenu(false); handleLogout(); }} className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2">
-                       <LogOut size={14} /> ログアウト
+                       <LogOut size={14} /> {tr('logout')}
                      </button>
                    </div>
                  </>
@@ -626,14 +626,14 @@ const App: React.FC = () => {
               
               <div className="text-center mb-12 animate-pulse">
                   <ScanBarcode size={120} className="text-green-400 mx-auto mb-6" />
-                  <h2 className="text-4xl font-bold text-white mb-2">登校スキャンモード</h2>
-                  <p className="text-xl text-green-400">学生証をスキャンしてください (Enter待機中)</p>
+                  <h2 className="text-4xl font-bold text-white mb-2">{tr('scanTitle')}</h2>
+                  <p className="text-xl text-green-400">{tr('scanInstruction')}</p>
               </div>
 
               <div className="w-full max-w-2xl bg-white/10 backdrop-blur rounded-xl border border-white/20 p-6">
-                  <h3 className="text-white font-bold mb-4 border-b border-white/20 pb-2">スキャン履歴</h3>
+                  <h3 className="text-white font-bold mb-4 border-b border-white/20 pb-2">{tr('scanHistory')}</h3>
                   <div className="space-y-2">
-                      {scanLog.length === 0 && <p className="text-white/30 text-center py-4">履歴なし</p>}
+                      {scanLog.length === 0 && <p className="text-white/30 text-center py-4">{tr('noScanHistory')}</p>}
                       {scanLog.map((log, i) => (
                           <div key={i} className={`flex justify-between items-center p-3 rounded ${log.status === 'success' ? 'bg-green-500/20 border border-green-500/50' : 'bg-red-500/20 border border-red-500/50'}`}>
                               <div className="flex items-center gap-4">

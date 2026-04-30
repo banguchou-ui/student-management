@@ -135,7 +135,7 @@ const StudentTable: React.FC<StudentTableProps> = ({
                             <td className="p-4 align-top">
                                 <div className="text-xs space-y-1">
                                     <div className={`font-bold ${isLowAttendance ? 'text-red-600' : 'text-gray-700'}`}>
-                                        出席率: {student.attendanceRate}% 
+                                        {tr('attendanceRateLabel')}: {student.attendanceRate}%
                                         {isLowAttendance && <AlertTriangle size={12} className="inline ml-1"/>}
                                     </div>
                                     <div className="text-gray-400">JLPT: {student.jlptLevel}</div>
@@ -144,9 +144,9 @@ const StudentTable: React.FC<StudentTableProps> = ({
                             </td>
                             <td className="p-4 align-top">
                                 <div className="space-y-1 text-xs">
-                                    <div className="flex justify-between"><span className="text-gray-500">残金</span><span className={student.tuitionStatus !== TuitionStatus.PAID ? 'text-red-600 font-bold' : 'text-green-600'}>¥{(student.tuitionBalance ?? (student.tuitionTotal - student.tuitionPaid)).toLocaleString()}</span></div>
+                                    <div className="flex justify-between"><span className="text-gray-500">{tr('balanceLabel')}</span><span className={student.tuitionStatus !== TuitionStatus.PAID ? 'text-red-600 font-bold' : 'text-green-600'}>¥{(student.tuitionBalance ?? (student.tuitionTotal - student.tuitionPaid)).toLocaleString()}</span></div>
                                     <div className={`font-bold ${isVisaDanger ? 'text-red-600 animate-pulse' : 'text-gray-500'}`}>
-                                        期限: {student.visaExpiry} {isVisaDanger && '!'}
+                                        {tr('deadlineLabel')}: {student.visaExpiry} {isVisaDanger && '!'}
                                     </div>
                                 </div>
                             </td>
@@ -168,7 +168,7 @@ const StudentTable: React.FC<StudentTableProps> = ({
                                           <Briefcase size={12}/> {student.workInfo.location} ({student.workInfo.hoursPerWeek}h)
                                           {isOverworked && <AlertCircle size={12}/>}
                                       </div>
-                                  ) : <span className="text-gray-300">バイトなし</span>}
+                                  ) : <span className="text-gray-300">{tr('noPartTime')}</span>}
                                   
                                   {student.jobHuntingStatus === '内定' && <div className="text-purple-600 font-bold">🎉 内定: {student.targetCompany}</div>}
                               </div>

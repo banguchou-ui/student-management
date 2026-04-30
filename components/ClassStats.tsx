@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import { Student, TuitionStatus } from '../types';
 import { BarChart2, PieChart as PieIcon, Wallet, Activity } from 'lucide-react';
+import { useTr } from '../i18n/translations';
 
 interface ClassStatsProps {
   students: Student[];
@@ -13,6 +14,7 @@ interface ClassStatsProps {
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#84cc16', '#f97316', '#14b8a6'];
 
 const ClassStats: React.FC<ClassStatsProps> = ({ students }) => {
+  const { tr } = useTr();
   // A. クラス別平均出席率
   const classAttendance = useMemo(() => {
     const map: Record<string, number[]> = {};
@@ -102,7 +104,7 @@ const ClassStats: React.FC<ClassStatsProps> = ({ students }) => {
   return (
     <div className="p-5 overflow-y-auto h-full bg-gray-50">
       <h2 className="text-lg font-bold text-gray-800 mb-5 flex items-center gap-2">
-        <BarChart2 size={20} className="text-indigo-600" /> クラス別統計ダッシュボード
+        <BarChart2 size={20} className="text-indigo-600" /> {tr('statsTitle')}
         <span className="text-sm font-normal text-gray-400 ml-2">全 {students.length} 名</span>
       </h2>
 

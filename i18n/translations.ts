@@ -76,6 +76,59 @@ const ja = {
   // Safety mode
   safetyModeLabel: '安否',
   scannerLabel: 'スキャン',
+  safetyEmergencyMode: '🚨 安否確認・災害モード',
+  scanTitle: '登校スキャンモード',
+  scanInstruction: '学生証をスキャンしてください (Enter待機中)',
+  scanHistory: 'スキャン履歴',
+  noScanHistory: '履歴なし',
+
+  // Tools menu
+  tools: 'ツール',
+  exportLabel: 'エクスポート',
+  importLabel: 'インポート',
+  backupLabel: 'バックアップ',
+  exportStudents: '学生一覧 Excel',
+  exportResidents: '在籍者名簿',
+  exportAdmission: '入退学届出一覧',
+  bulkImport: '一括インポート',
+  backupSave: 'バックアップ保存',
+  backupRestore: 'バックアップから復元',
+  emailSettings: 'メール設定',
+  dataReset: 'データ初期化',
+
+  // Immigration menu
+  immigration: '入管届出',
+  rosterReport: '在籍者名簿',
+  rosterReportSub: '5月/11月 定期届出用',
+  admissionReport: '入退学届出一覧',
+  admissionReportSub: '入退学から14日以内',
+
+  // Avatar menu
+  passwordChange: 'パスワード変更',
+
+  // Statistics tab
+  statistics: '統計',
+
+  // Notices
+  noticeBoard: 'お知らせ・掲示板',
+  autoNotifyUpdate: '自動通知を更新',
+  autoNotifyUpdated: '更新しました ✓',
+  newPost: '新規投稿',
+  noNotices: 'お知らせはありません',
+  autoGenerate: '自動通知を生成する',
+  postTitle: 'タイトル',
+  postContent: '内容（任意）',
+  postExpiry: '掲載期限',
+  post: '投稿',
+
+  // Student table row
+  attendanceRateLabel: '出席率',
+  noPartTime: 'バイトなし',
+  balanceLabel: '残金',
+  deadlineLabel: '期限',
+
+  // Stats
+  statsTitle: 'クラス別統計ダッシュボード',
 
   // Common
   noData: 'データなし',
@@ -132,6 +185,59 @@ const en: typeof ja = {
   // Safety mode
   safetyModeLabel: 'Safety',
   scannerLabel: 'Scan',
+  safetyEmergencyMode: '🚨 Safety Check / Emergency',
+  scanTitle: 'Attendance Scan Mode',
+  scanInstruction: 'Scan student ID card (awaiting Enter)',
+  scanHistory: 'Scan History',
+  noScanHistory: 'No history',
+
+  // Tools menu
+  tools: 'Tools',
+  exportLabel: 'Export',
+  importLabel: 'Import',
+  backupLabel: 'Backup',
+  exportStudents: 'Student List (Excel)',
+  exportResidents: 'Resident Roster',
+  exportAdmission: 'Enrollment Report',
+  bulkImport: 'Bulk Import',
+  backupSave: 'Save Backup',
+  backupRestore: 'Restore Backup',
+  emailSettings: 'Email Settings',
+  dataReset: 'Reset Data',
+
+  // Immigration menu
+  immigration: 'Immigration',
+  rosterReport: 'Resident Roster',
+  rosterReportSub: 'May/Nov periodic report',
+  admissionReport: 'Enrollment Report',
+  admissionReportSub: 'Within 14 days of enrollment',
+
+  // Avatar menu
+  passwordChange: 'Change Password',
+
+  // Statistics tab
+  statistics: 'Stats',
+
+  // Notices
+  noticeBoard: 'Notices & Board',
+  autoNotifyUpdate: 'Update Auto Notices',
+  autoNotifyUpdated: 'Updated ✓',
+  newPost: 'New Post',
+  noNotices: 'No notices',
+  autoGenerate: 'Generate auto notices',
+  postTitle: 'Title',
+  postContent: 'Content (optional)',
+  postExpiry: 'Expires',
+  post: 'Post',
+
+  // Student table row
+  attendanceRateLabel: 'Attendance',
+  noPartTime: 'No part-time',
+  balanceLabel: 'Balance',
+  deadlineLabel: 'Expires',
+
+  // Stats
+  statsTitle: 'Class Statistics Dashboard',
 
   // Common
   noData: 'No data',

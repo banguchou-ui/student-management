@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Bell, Plus, Trash2, Pin, AlertCircle, Info, CheckCircle, RefreshCw } from 'lucide-react';
 import { Student } from '../types';
 import { generateAutoNotices, Notice } from '../utils/autoNotify';
+import { useTr } from '../i18n/translations';
 
 interface NoticeManagerProps {
   currentUserName: string;
@@ -19,6 +20,7 @@ const TYPE_CONFIG = {
 };
 
 const NoticeManager: React.FC<NoticeManagerProps> = ({ currentUserName, canEdit, students }) => {
+  const { tr } = useTr();
   const [notices, setNotices] = useState<Notice[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: '', content: '', type: 'info' as Notice['type'], expiresAt: '' });
@@ -86,7 +88,7 @@ const NoticeManager: React.FC<NoticeManagerProps> = ({ currentUserName, canEdit,
       <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <Bell size={20} className="text-indigo-600" />
-          <h2 className="font-bold text-gray-800">お知らせ・掲示板</h2>
+          <h2 className="font-bold text-gray-800">{tr('noticeBoard')}</h2>
           {sortedNotices.filter(n => n.type === 'urgent').length > 0 && (
             <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
               緊急 {sortedNotices.filter(n => n.type === 'urgent').length}件
@@ -105,7 +107,7 @@ const NoticeManager: React.FC<NoticeManagerProps> = ({ currentUserName, canEdit,
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm transition font-medium border ${autoUpdated ? 'bg-green-50 text-green-700 border-green-300' : 'bg-gray-50 text-gray-600 hover:bg-yellow-50 hover:text-yellow-700 hover:border-yellow-300 border-gray-200'}`}
             >
               <RefreshCw size={13} className={autoUpdated ? '' : ''} />
-              {autoUpdated ? '更新しました ✓' : '自動通知を更新'}
+              {autoUpdated ? tr('autoNotifyUpdated') : tr('autoNotifyUpdate')}
             </button>
           )}
           {canEdit && (
@@ -113,7 +115,7 @@ const NoticeManager: React.FC<NoticeManagerProps> = ({ currentUserName, canEdit,
               onClick={() => setShowForm(true)}
               className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700"
             >
-              <Plus size={14} /> 新規投稿
+              <Plus size={14} /> {tr('newPost')}
             </button>
           )}
         </div>
@@ -127,7 +129,7 @@ const NoticeManager: React.FC<NoticeManagerProps> = ({ currentUserName, canEdit,
               <input
                 value={form.title}
                 onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
-                placeholder="タイトル"
+                placeholder={tr('postTitle')}
                 className="flex-1 border rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none"
               />
               <select
@@ -143,12 +145,12 @@ const NoticeManager: React.FC<NoticeManagerProps> = ({ currentUserName, canEdit,
             <textarea
               value={form.content}
               onChange={e => setForm(p => ({ ...p, content: e.target.value }))}
-              placeholder="内容（任意）"
+              placeholder={tr('postContent')}
               rows={3}
               className="w-full border rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none resize-none"
             />
             <div className="flex gap-3 items-center">
-              <label className="text-sm text-gray-600">掲載期限:</label>
+              <label className="text-sm text-gray-600">{tr('postExpiry')}:</label>
               <input
                 type="date"
                 value={form.expiresAt}
@@ -157,10 +159,10 @@ const NoticeManager: React.FC<NoticeManagerProps> = ({ currentUserName, canEdit,
               />
               <div className="flex gap-2 ml-auto">
                 <button onClick={() => setShowForm(false)} className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded">
-                  キャンセル
+                  {tr('cancel')}
                 </button>
                 <button onClick={addNotice} className="px-4 py-1.5 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 font-medium">
-                  投稿
+                  {tr('post')}
                 </button>
               </div>
             </div>
@@ -173,10 +175,10 @@ const NoticeManager: React.FC<NoticeManagerProps> = ({ currentUserName, canEdit,
         {sortedNotices.length === 0 && (
           <div className="text-center py-16 text-gray-400">
             <Bell size={48} className="mx-auto mb-4 opacity-30" />
-            <p className="mb-2">お知らせはありません</p>
+            <p className="mb-2">{tr('noNotices')}</p>
             {canEdit && (
               <button onClick={handleAutoNotify} className="text-sm text-indigo-500 underline">
-                自動通知を生成する
+                {tr('autoGenerate')}
               </button>
             )}
           </div>
