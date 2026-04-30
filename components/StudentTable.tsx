@@ -64,7 +64,7 @@ const StudentTable: React.FC<StudentTableProps> = ({
               onClick={() => onFilterChange('noPhoto', filters.noPhoto ? '' : 'true')}
               className={`flex items-center gap-1.5 border rounded px-3 py-1.5 text-sm transition ${filters.noPhoto ? 'bg-pink-100 text-pink-700 border-pink-300 font-bold' : 'bg-gray-50 text-gray-600 hover:bg-pink-50 hover:text-pink-600 hover:border-pink-200'}`}
             >
-              <Camera size={13} /> 写真なし
+              <Camera size={13} /> {tr('noPhoto')}
             </button>
             </div>
         </div>
