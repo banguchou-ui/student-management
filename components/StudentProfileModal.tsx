@@ -12,21 +12,6 @@ interface StudentProfileModalProps {
   onUpdateStudent?: (student: Student) => void;
 }
 
-const VISA_CHECKLIST_LABELS: Record<string, string> = {
-  graduationCert: '卒業証明書',
-  transcript: '成績証明書',
-  attendanceCert: '出席証明書',
-  recommendation: '推薦状',
-  jobHuntingStatement: '就活理由書',
-};
-
-const CAREER_MILESTONE_LABELS: Record<string, string> = {
-  resumeComplete: '履歴書完成',
-  interviewTraining: '面接練習',
-  jobOffer: '内定取得',
-  visaChangeApplied: 'ビザ変更申請',
-};
-
 type TabId = 'basic' | 'academic' | 'visa' | 'life';
 
 const Row: React.FC<{ label: string; value?: React.ReactNode }> = ({ label, value }) => (
@@ -38,6 +23,21 @@ const Row: React.FC<{ label: string; value?: React.ReactNode }> = ({ label, valu
 
 const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onClose, onUpdateStudent }) => {
   const { tr } = useTr();
+
+  const VISA_CHECKLIST_LABELS: Record<string, string> = {
+    graduationCert: tr('visaGradCert'),
+    transcript: tr('visaTranscript'),
+    attendanceCert: tr('visaAttendCert'),
+    recommendation: tr('visaRecommend'),
+    jobHuntingStatement: tr('visaJobStatement'),
+  };
+
+  const CAREER_MILESTONE_LABELS: Record<string, string> = {
+    resumeComplete: tr('careerResume'),
+    interviewTraining: tr('careerInterview'),
+    jobOffer: tr('careerOffer'),
+    visaChangeApplied: tr('careerVisaChange'),
+  };
 
   const TABS: { id: TabId; label: string }[] = [
     { id: 'basic', label: tr('tabBasic') },
@@ -385,9 +385,9 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onCl
                   <p className="text-xl font-bold text-gray-900 mb-0.5">{student.name}</p>
                   <p className="text-sm text-gray-400 mb-3">{student.studentId}</p>
                   <div className="flex gap-2 flex-wrap">
-                    {student.careerMilestones.jobOffer && <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded border border-green-200 font-bold">内定取得</span>}
-                    {student.academicInfo.creditsEarned && <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded border border-blue-200 font-bold">単位満了</span>}
-                    {student.safetyStatus === '無事' && <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded border border-green-200">安否OK</span>}
+                    {student.careerMilestones.jobOffer && <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded border border-green-200 font-bold">{tr('careerOffer')}</span>}
+                    {student.academicInfo.creditsEarned && <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded border border-blue-200 font-bold">{tr('creditsFullLabel')}</span>}
+                    {student.safetyStatus === '無事' && <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded border border-green-200">{tr('safetyOkLabel')}</span>}
                   </div>
                 </div>
               </div>
@@ -473,7 +473,7 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onCl
                 </div>
               )}
 
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-4 mb-2">銀行情報</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-4 mb-2">{tr('bankInfoTitle')}</p>
               <Row label={tr('bankNameLabel')} value={student.bankInfo.bankName || undefined} />
               <Row label={tr('branchNameLabel')} value={student.bankInfo.branchName} />
               <Row label={tr('accountNumberLabel')} value={student.bankInfo.accountNumber} />

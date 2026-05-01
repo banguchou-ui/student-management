@@ -207,7 +207,7 @@ const App: React.FC = () => {
   
   const handleProfileUpdate = async (updatedStudent: Student) => {
      setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
-     setViewingStudent(updatedStudent);
+     setViewingStudent(prev => prev?.id === updatedStudent.id ? updatedStudent : prev);
      try {
        await saveStudent(updatedStudent);
      } catch (error: any) {

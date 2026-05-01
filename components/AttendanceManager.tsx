@@ -195,7 +195,7 @@ const AttendanceManager: React.FC<AttendanceManagerProps> = ({ students, onUpdat
               {DISPLAY_LABELS[key]} = {FULL_LABELS[key]}
             </span>
           ))}
-          <span className="text-xs text-gray-400 self-center">{lang === 'en' ? '(right-click = clear)' : '(右クリック = クリア)'}</span>
+          <span className="text-xs text-gray-400 self-center">({tr('rightClickClear')})</span>
         </div>
       </div>
 
@@ -205,7 +205,7 @@ const AttendanceManager: React.FC<AttendanceManagerProps> = ({ students, onUpdat
           <thead className="sticky top-0 bg-gray-100 z-10">
             <tr>
               <th className="border border-gray-200 p-2 text-left min-w-[140px] sticky left-0 bg-gray-100 z-20">
-                {lang === 'en' ? 'Student' : '学生'}
+                {tr('studentColLabel')}
               </th>
               {daysInMonth.map(d => {
                 const date = new Date(year, month, d);

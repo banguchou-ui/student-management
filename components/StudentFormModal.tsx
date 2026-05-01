@@ -115,11 +115,11 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name?.trim()) {
-      alert('氏名を入力してください');
+      alert(tr('nameRequiredAlert'));
       return;
     }
     if (!formData.studentId?.trim()) {
-      alert('学籍番号を入力してください');
+      alert(tr('idRequiredAlert'));
       return;
     }
     const finalData = { ...formData };
@@ -176,7 +176,7 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                     <div className="space-y-6 animate-fade-in">
                         {/* 1. Identity */}
                         <div className="bg-white p-6 rounded-lg shadow-sm border">
-                            <h3 className="text-lg font-bold text-gray-700 mb-4 border-b pb-2">基本個人情報</h3>
+                            <h3 className="text-lg font-bold text-gray-700 mb-4 border-b pb-2">{tr('basicInfoTitle')}</h3>
                             <div className="flex flex-col md:flex-row gap-6">
                                 {/* Photo Area with Pan Controls */}
                                 <div className="w-40 flex flex-col items-center gap-2 shrink-0">
@@ -184,7 +184,7 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                                         {formData.photoBase64 ? (
                                             <img src={formData.photoBase64} className="w-full h-full object-cover transition-transform origin-center" style={{transform: `scale(${formData.photoTransform.scale}) translate(${formData.photoTransform.x}px, ${formData.photoTransform.y}px)`}}/>
                                         ) : (
-                                            <span className="text-xs text-gray-400 m-auto block text-center pt-16">写真なし</span>
+                                            <span className="text-xs text-gray-400 m-auto block text-center pt-16">{tr('noPhotoLabel')}</span>
                                         )}
                                         {permissions.canEditBasicInfo && <div onClick={() => photoRef.current?.click()} className="absolute inset-0 bg-black/30 hidden group-hover:flex items-center justify-center cursor-pointer"><Upload className="text-white"/></div>}
                                     </div>
@@ -267,7 +267,7 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                         <div className="bg-white p-6 rounded-lg shadow-sm border border-indigo-100 relative">
                             {!permissions.canEditWorkInfo && <div className="absolute inset-0 bg-gray-50/50 z-10 cursor-not-allowed"/>}
                             <h3 className="text-lg font-bold text-indigo-800 mb-4 border-b border-indigo-100 pb-2 flex items-center justify-between">
-                                <span className="flex items-center gap-2"><Clock size={20}/> アルバイト管理 (資格外活動)</span>
+                                <span className="flex items-center gap-2"><Clock size={20}/> {tr('partTimeTitle')}</span>
                                 <label className="flex items-center gap-2 text-xs text-gray-600 font-normal bg-yellow-50 px-2 py-1 rounded border border-yellow-200">
                                     <input type="checkbox" checked={formData.workInfo.isLongVacation} onChange={e => handleWorkChange('isLongVacation', e.target.checked)} />
                                     {tr('longVacCheck')}
@@ -293,19 +293,19 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                                 <div className="grid grid-cols-3 gap-4">
                                     <div><label className="text-xs font-bold text-gray-500">{tr('weeklyHoursLabel')} (h)</label><input type="number" step="0.5" value={formData.workInfo.hoursPerWeek} onChange={e => handleWorkChange('hoursPerWeek', parseFloat(e.target.value))} className={`w-full border p-2 rounded ${formData.workInfo.hoursPerWeek > (formData.workInfo.isLongVacation ? 40 : 28) ? 'bg-red-50 border-red-300 text-red-600 font-bold' : ''}`}/></div>
                                     <div><label className="text-xs font-bold text-gray-500">{tr('hourlyWageLabel')}</label><input type="number" value={formData.workInfo.hourlyWage} onChange={e => handleWorkChange('hourlyWage', parseInt(e.target.value))} className="w-full border p-2 rounded"/></div>
-                                    <div><label className="text-xs font-bold text-gray-500">勤務先電話番号</label><input value={formData.workInfo.phone} onChange={e => handleWorkChange('phone', e.target.value)} className="w-full border p-2 rounded" placeholder="緊急連絡用"/></div>
+                                    <div><label className="text-xs font-bold text-gray-500">{tr('workPhoneLabel')}</label><input value={formData.workInfo.phone} onChange={e => handleWorkChange('phone', e.target.value)} className="w-full border p-2 rounded"/></div>
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-4">
                                     <div>
-                                        <label className="text-xs font-bold text-gray-500">時間帯 (シフト)</label>
+                                        <label className="text-xs font-bold text-gray-500">{tr('workShiftLabel')}</label>
                                         <select value={formData.workInfo.shift} onChange={e => handleWorkChange('shift', e.target.value)} className="w-full border p-2 rounded">
                                             {WORK_SHIFTS.map(s => <option key={s} value={s}>{s}</option>)}
                                         </select>
                                     </div>
                                     {/* Work Time (Restored) */}
-                                    <div><label className="text-xs font-bold text-gray-500">開始時間</label><input type="time" value={formData.workInfo.startTime} onChange={e => handleWorkChange('startTime', e.target.value)} className="w-full border p-2 rounded"/></div>
-                                    <div><label className="text-xs font-bold text-gray-500">終了時間</label><input type="time" value={formData.workInfo.endTime} onChange={e => handleWorkChange('endTime', e.target.value)} className="w-full border p-2 rounded"/></div>
+                                    <div><label className="text-xs font-bold text-gray-500">{tr('workStartLabel')}</label><input type="time" value={formData.workInfo.startTime} onChange={e => handleWorkChange('startTime', e.target.value)} className="w-full border p-2 rounded"/></div>
+                                    <div><label className="text-xs font-bold text-gray-500">{tr('workEndLabel')}</label><input type="time" value={formData.workInfo.endTime} onChange={e => handleWorkChange('endTime', e.target.value)} className="w-full border p-2 rounded"/></div>
                                 </div>
                             </div>
                         </div>
@@ -338,7 +338,7 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
 
                             {/* Additional Exams (Restored) */}
                             <div className="mt-4 pt-4 border-t">
-                                <label className="text-xs font-bold text-gray-500 mb-2 block">外部試験・資格 (EJU, TOEIC, NAT-TEST等)</label>
+                                <label className="text-xs font-bold text-gray-500 mb-2 block">{tr('examsTitle')}</label>
                                 {formData.additionalExams.map(ex => (
                                     <div key={ex.id} className="flex gap-2 mb-2">
                                         <input placeholder="試験名 (例: EJU日本語)" value={ex.name} onChange={e => updateExam(ex.id, 'name', e.target.value)} className="border p-2 rounded text-sm flex-1"/>
@@ -346,7 +346,7 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                                         <button type="button" onClick={() => setFormData(prev => ({...prev, additionalExams: prev.additionalExams.filter(x => x.id !== ex.id)}))} className="text-gray-400 hover:text-red-500"><Trash2 size={16}/></button>
                                     </div>
                                 ))}
-                                <button type="button" onClick={addExam} className="text-xs text-indigo-600 font-bold hover:underline">+ 資格を追加</button>
+                                <button type="button" onClick={addExam} className="text-xs text-indigo-600 font-bold hover:underline">{tr('addExamLabel')}</button>
                             </div>
                         </div>
 
@@ -359,11 +359,11 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                                         {TUITION_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                                     </select>
                                 </div>
-                                <div><label className="text-xs font-bold text-gray-500">次回納入期限</label><input type="date" value={formData.nextTuitionDeadline} onChange={e => handleChange('nextTuitionDeadline', e.target.value)} className="w-full border p-2 rounded"/></div>
-                                <div><label className="text-xs font-bold text-gray-500">学費総額</label><input type="number" value={formData.tuitionTotal} onChange={e => handleChange('tuitionTotal', parseInt(e.target.value))} className="w-full border p-2 rounded"/></div>
-                                <div><label className="text-xs font-bold text-gray-500">既納入額</label><input type="number" value={formData.tuitionPaid} onChange={e => handleChange('tuitionPaid', parseInt(e.target.value))} className="w-full border p-2 rounded"/></div>
+                                <div><label className="text-xs font-bold text-gray-500">{tr('nextTuitionLabel')}</label><input type="date" value={formData.nextTuitionDeadline} onChange={e => handleChange('nextTuitionDeadline', e.target.value)} className="w-full border p-2 rounded"/></div>
+                                <div><label className="text-xs font-bold text-gray-500">{tr('tuitionTotalLabel')}</label><input type="number" value={formData.tuitionTotal} onChange={e => handleChange('tuitionTotal', parseInt(e.target.value))} className="w-full border p-2 rounded"/></div>
+                                <div><label className="text-xs font-bold text-gray-500">{tr('tuitionPaidLabel')}</label><input type="number" value={formData.tuitionPaid} onChange={e => handleChange('tuitionPaid', parseInt(e.target.value))} className="w-full border p-2 rounded"/></div>
                                 <div className="md:col-span-2 bg-gray-50 p-2 rounded flex justify-between items-center text-sm">
-                                    <span className="text-gray-500 font-bold">残額（未納分）:</span>
+                                    <span className="text-gray-500 font-bold">{tr('tuitionBalanceLabel')}</span>
                                     <div className="flex items-center gap-2">
                                         <span className="text-gray-400">¥</span>
                                         <input
@@ -446,7 +446,7 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                     <div className="space-y-6 animate-fade-in">
                         {/* Visa & Identity */}
                         <div className="bg-white p-6 rounded-lg shadow-sm border">
-                            <h3 className="text-lg font-bold text-gray-700 mb-4 border-b pb-2 flex items-center gap-2"><FileCheck size={20}/> ビザ・在留カード</h3>
+                            <h3 className="text-lg font-bold text-gray-700 mb-4 border-b pb-2 flex items-center gap-2"><FileCheck size={20}/> {tr('visaCardTitle')}</h3>
                             
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                                 <div><label className="text-xs font-bold text-gray-500">{tr('residenceCardLabel')}</label><input value={formData.zairyuCardNumber} onChange={e => handleChange('zairyuCardNumber', e.target.value)} className="w-full border p-2 rounded" placeholder="AB12345678CD"/></div>
@@ -466,17 +466,17 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                             <div className="flex gap-4 mb-6">
                                 <div className="flex-1 bg-gray-50 border-2 border-dashed border-gray-300 rounded p-4 flex flex-col items-center justify-center text-center group cursor-pointer" onClick={() => zairyuFrontRef.current?.click()}>
                                     {formData.zairyuCardFront ? <img src={formData.zairyuCardFront} className="h-24 object-contain mb-2"/> : <FileImage className="text-gray-400 mb-2" size={32}/>}
-                                    <span className="text-xs text-gray-500 font-bold">在留カード(表)</span>
+                                    <span className="text-xs text-gray-500 font-bold">{tr('zairyuFrontLabel')}</span>
                                     <input type="file" ref={zairyuFrontRef} className="hidden" onChange={e => e.target.files?.[0] && handleFileRead(e.target.files[0], res => handleChange('zairyuCardFront', res))}/>
                                 </div>
                                 <div className="flex-1 bg-gray-50 border-2 border-dashed border-gray-300 rounded p-4 flex flex-col items-center justify-center text-center group cursor-pointer" onClick={() => zairyuBackRef.current?.click()}>
                                     {formData.zairyuCardBack ? <img src={formData.zairyuCardBack} className="h-24 object-contain mb-2"/> : <FileImage className="text-gray-400 mb-2" size={32}/>}
-                                    <span className="text-xs text-gray-500 font-bold">在留カード(裏)</span>
+                                    <span className="text-xs text-gray-500 font-bold">{tr('zairyuBackLabel')}</span>
                                      <input type="file" ref={zairyuBackRef} className="hidden" onChange={e => e.target.files?.[0] && handleFileRead(e.target.files[0], res => handleChange('zairyuCardBack', res))}/>
                                 </div>
                             </div>
 
-                            <h4 className="text-sm font-bold text-gray-600 mb-2">更新・変更書類チェックリスト</h4>
+                            <h4 className="text-sm font-bold text-gray-600 mb-2">{tr('visaDocsTitle')}</h4>
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                 {Object.keys(formData.visaChecklist).map(key => (
                                     <label key={key} className="flex items-center gap-2 bg-gray-50 px-3 py-3 rounded border cursor-pointer hover:bg-gray-100 transition">
@@ -495,7 +495,7 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
 
                         {/* Career & Exit */}
                         <div className="bg-white p-6 rounded-lg shadow-sm border">
-                            <h3 className="text-lg font-bold text-gray-700 mb-4 border-b pb-2 flex items-center gap-2"><Briefcase size={20}/> 進路・就職</h3>
+                            <h3 className="text-lg font-bold text-gray-700 mb-4 border-b pb-2 flex items-center gap-2"><Briefcase size={20}/> {tr('careerTitle')}</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
                                     <label className="text-xs font-bold text-gray-500">{tr('jobHuntingLabel')}</label>
@@ -512,8 +512,8 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                                 <label className="flex items-center gap-2 font-bold text-sm text-blue-800"><input type="checkbox" checked={formData.careerMilestones.visaChangeApplied} onChange={e => handleDeepChange('careerMilestones', 'visaChangeApplied', e.target.checked)}/> {tr('careerVisaChange')}</label>
                             </div>
                             <div className="grid grid-cols-1 gap-2">
-                                <label className="text-xs font-bold text-gray-500">離籍後の住所（帰国/就職後）</label>
-                                <input value={formData.exitInfo.addressAfterLeaving} onChange={e => handleDeepChange('exitInfo', 'addressAfterLeaving', e.target.value)} className="w-full border p-2 rounded" placeholder="郵便番号・住所"/>
+                                <label className="text-xs font-bold text-gray-500">{tr('exitAddressLabel')}</label>
+                                <input value={formData.exitInfo.addressAfterLeaving} onChange={e => handleDeepChange('exitInfo', 'addressAfterLeaving', e.target.value)} className="w-full border p-2 rounded"/>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-dashed border-gray-200">
                                 <div>
@@ -529,18 +529,18 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
 
                         {/* Admin Info */}
                         <div className="bg-white p-6 rounded-lg shadow-sm border">
-                            <h3 className="text-lg font-bold text-gray-700 mb-4 border-b pb-2 flex items-center gap-2"><Building size={20}/> 行政・銀行口座</h3>
+                            <h3 className="text-lg font-bold text-gray-700 mb-4 border-b pb-2 flex items-center gap-2"><Building size={20}/> {tr('adminBankTitle')}</h3>
                             <div className="flex items-center gap-4 bg-gray-50 p-3 rounded border mb-4">
                                 <span className="text-sm font-bold text-gray-600">My Number Card:</span>
-                                {formData.myNumberPhoto ? <span className="text-xs text-green-600 font-bold bg-green-100 px-2 py-1 rounded">登録済み</span> : <span className="text-xs text-gray-400">未登録</span>}
-                                <button type="button" onClick={() => myNumberRef.current?.click()} className="ml-auto text-xs border bg-white px-2 py-1 rounded hover:bg-gray-100">画像アップロード</button>
+                                {formData.myNumberPhoto ? <span className="text-xs text-green-600 font-bold bg-green-100 px-2 py-1 rounded">{tr('myNumberRegistered')}</span> : <span className="text-xs text-gray-400">{tr('myNumberUnregistered')}</span>}
+                                <button type="button" onClick={() => myNumberRef.current?.click()} className="ml-auto text-xs border bg-white px-2 py-1 rounded hover:bg-gray-100">{tr('myNumberUpload')}</button>
                                 <input type="file" ref={myNumberRef} className="hidden" onChange={e => e.target.files?.[0] && handleFileRead(e.target.files[0], res => handleChange('myNumberPhoto', res))} />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
-                                <div><label className="text-xs font-bold text-gray-500">銀行名</label><input value={formData.bankInfo.bankName} onChange={e => handleDeepChange('bankInfo', 'bankName', e.target.value)} className="w-full border p-2 rounded" placeholder="例: ゆうちょ銀行"/></div>
-                                <div><label className="text-xs font-bold text-gray-500">支店名/記号</label><input value={formData.bankInfo.branchName} onChange={e => handleDeepChange('bankInfo', 'branchName', e.target.value)} className="w-full border p-2 rounded"/></div>
-                                <div><label className="text-xs font-bold text-gray-500">口座番号</label><input value={formData.bankInfo.accountNumber} onChange={e => handleDeepChange('bankInfo', 'accountNumber', e.target.value)} className="w-full border p-2 rounded"/></div>
-                                <div><label className="text-xs font-bold text-gray-500">名義人(カナ)</label><input value={formData.bankInfo.accountHolder} onChange={e => handleDeepChange('bankInfo', 'accountHolder', e.target.value)} className="w-full border p-2 rounded"/></div>
+                                <div><label className="text-xs font-bold text-gray-500">{tr('bankNameLabel')}</label><input value={formData.bankInfo.bankName} onChange={e => handleDeepChange('bankInfo', 'bankName', e.target.value)} className="w-full border p-2 rounded"/></div>
+                                <div><label className="text-xs font-bold text-gray-500">{tr('branchCodeLabel')}</label><input value={formData.bankInfo.branchName} onChange={e => handleDeepChange('bankInfo', 'branchName', e.target.value)} className="w-full border p-2 rounded"/></div>
+                                <div><label className="text-xs font-bold text-gray-500">{tr('accountNumberLabel')}</label><input value={formData.bankInfo.accountNumber} onChange={e => handleDeepChange('bankInfo', 'accountNumber', e.target.value)} className="w-full border p-2 rounded"/></div>
+                                <div><label className="text-xs font-bold text-gray-500">{tr('accountHolderKana')}</label><input value={formData.bankInfo.accountHolder} onChange={e => handleDeepChange('bankInfo', 'accountHolder', e.target.value)} className="w-full border p-2 rounded"/></div>
                             </div>
                         </div>
                     </div>
@@ -551,23 +551,23 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                     <div className="space-y-6 animate-fade-in">
                         <div className="bg-white p-6 rounded-lg shadow-sm border border-red-100">
                             <h3 className="text-lg font-bold text-red-700 mb-4 border-b pb-2 flex items-center gap-2"><AlertTriangle size={20}/> {tr('warningHistoryLabel')}</h3>
-                            {formData.warningHistory.length === 0 && <p className="text-gray-400 text-sm py-4 text-center">指導記録はありません</p>}
+                            {formData.warningHistory.length === 0 && <p className="text-gray-400 text-sm py-4 text-center">{tr('noWarningsLabel')}</p>}
                             {formData.warningHistory.map(w => (
                                 <div key={w.id} className="flex gap-2 mb-3 items-start bg-red-50 p-2 rounded border border-red-100">
                                     <input type="date" value={w.date} onChange={e => updateWarning(w.id, 'date', e.target.value)} className="border p-1 rounded text-sm"/>
                                     <select value={w.level} onChange={e => updateWarning(w.id, 'level', e.target.value)} className="border p-1 rounded text-sm w-32">{WARNING_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}</select>
                                     <input value={w.reason} onChange={e => updateWarning(w.id, 'reason', e.target.value)} className="border p-1 rounded text-sm flex-1" placeholder="指導内容・事由"/>
                                     <div className="flex flex-col items-center gap-1">
-                                        <label className="flex items-center gap-1 text-xs whitespace-nowrap"><input type="checkbox" checked={w.signed} onChange={e => updateWarning(w.id, 'signed', e.target.checked)} /> 本人署名</label>
-                                        <button type="button" onClick={() => setFormData(prev => ({...prev, warningHistory: prev.warningHistory.filter(x => x.id !== w.id)}))} className="text-red-500 text-xs hover:bg-red-200 px-2 py-1 rounded">削除</button>
+                                        <label className="flex items-center gap-1 text-xs whitespace-nowrap"><input type="checkbox" checked={w.signed} onChange={e => updateWarning(w.id, 'signed', e.target.checked)} /> {tr('signedLabel')}</label>
+                                        <button type="button" onClick={() => setFormData(prev => ({...prev, warningHistory: prev.warningHistory.filter(x => x.id !== w.id)}))} className="text-red-500 text-xs hover:bg-red-200 px-2 py-1 rounded">{tr('deleteLabel')}</button>
                                     </div>
                                 </div>
                             ))}
-                            <button type="button" onClick={addWarning} className="w-full text-sm bg-white text-red-600 px-3 py-2 rounded border border-dashed border-red-300 mt-2 hover:bg-red-50">+ 指導記録を追加</button>
+                            <button type="button" onClick={addWarning} className="w-full text-sm bg-white text-red-600 px-3 py-2 rounded border border-dashed border-red-300 mt-2 hover:bg-red-50">{tr('addWarningLabel')}</button>
                         </div>
 
                          <div className="bg-white p-6 rounded-lg shadow-sm border">
-                            <h3 className="text-lg font-bold text-gray-700 mb-4 border-b pb-2 flex items-center gap-2"><Shield size={20}/> 生活安全・住居・通勤</h3>
+                            <h3 className="text-lg font-bold text-gray-700 mb-4 border-b pb-2 flex items-center gap-2"><Shield size={20}/> {tr('lifeSafetyTitle')}</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-xs font-bold text-gray-500">{tr('housingLabel')}</label>
