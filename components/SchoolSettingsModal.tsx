@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { X, Save, School, Upload, Image } from 'lucide-react';
+import { useTr } from '../i18n/translations';
 
 export interface SchoolSettings {
   schoolName: string;
@@ -40,6 +41,7 @@ interface Props {
 }
 
 const SchoolSettingsModal: React.FC<Props> = ({ onClose }) => {
+  const { tr } = useTr();
   const [form, setForm] = useState<SchoolSettings>(loadSchoolSettings);
   const logoRef = useRef<HTMLInputElement>(null);
 
@@ -62,14 +64,14 @@ const SchoolSettingsModal: React.FC<Props> = ({ onClose }) => {
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden">
         <div className="flex justify-between items-center px-5 py-3 bg-indigo-600 text-white shrink-0">
-          <h2 className="font-bold flex items-center gap-2"><School size={18} /> 学校設定</h2>
+          <h2 className="font-bold flex items-center gap-2"><School size={18} /> {tr('schoolSettingsTitle')}</h2>
           <button onClick={onClose} className="hover:bg-indigo-500 p-1 rounded"><X size={20} /></button>
         </div>
 
         <div className="p-5 space-y-4 overflow-y-auto">
           {/* Logo Upload */}
           <div>
-            <label className="text-xs font-bold text-gray-500 block mb-2">学校ロゴ</label>
+            <label className="text-xs font-bold text-gray-500 block mb-2">{tr('schoolLogoLabel')}</label>
             <div className="flex items-center gap-4">
               <div
                 className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 cursor-pointer hover:bg-gray-100 overflow-hidden"
@@ -85,7 +87,7 @@ const SchoolSettingsModal: React.FC<Props> = ({ onClose }) => {
                   onClick={() => logoRef.current?.click()}
                   className="flex items-center gap-2 text-sm border rounded px-3 py-1.5 hover:bg-gray-50"
                 >
-                  <Upload size={14} /> ロゴをアップロード
+                  <Upload size={14} /> {tr('uploadLogoLabel')}
                 </button>
                 {form.logoBase64 && (
                   <button
@@ -109,7 +111,7 @@ const SchoolSettingsModal: React.FC<Props> = ({ onClose }) => {
           </div>
 
           <div>
-            <label className="text-xs font-bold text-gray-500 block mb-1">学校名 *</label>
+            <label className="text-xs font-bold text-gray-500 block mb-1">{tr('schoolNameLabel')} *</label>
             <input
               value={form.schoolName}
               onChange={e => handleChange('schoolName', e.target.value)}
@@ -118,7 +120,7 @@ const SchoolSettingsModal: React.FC<Props> = ({ onClose }) => {
             />
           </div>
           <div>
-            <label className="text-xs font-bold text-gray-500 block mb-1">住所</label>
+            <label className="text-xs font-bold text-gray-500 block mb-1">{tr('addressLabel')}</label>
             <input
               value={form.schoolAddress}
               onChange={e => handleChange('schoolAddress', e.target.value)}
@@ -127,7 +129,7 @@ const SchoolSettingsModal: React.FC<Props> = ({ onClose }) => {
             />
           </div>
           <div>
-            <label className="text-xs font-bold text-gray-500 block mb-1">校長名</label>
+            <label className="text-xs font-bold text-gray-500 block mb-1">{tr('principalLabel')}</label>
             <input
               value={form.principalName}
               onChange={e => handleChange('principalName', e.target.value)}
@@ -145,7 +147,7 @@ const SchoolSettingsModal: React.FC<Props> = ({ onClose }) => {
             />
           </div>
           <div>
-            <label className="text-xs font-bold text-gray-500 block mb-1">メールアドレス</label>
+            <label className="text-xs font-bold text-gray-500 block mb-1">{tr('emailLabel')}</label>
             <input
               type="email"
               value={form.email}
@@ -156,7 +158,7 @@ const SchoolSettingsModal: React.FC<Props> = ({ onClose }) => {
           </div>
 
           <div>
-            <label className="text-xs font-bold text-gray-500 block mb-1">住居地デフォルト（入管届出用）</label>
+            <label className="text-xs font-bold text-gray-500 block mb-1">{tr('defaultResidenceLabel')}</label>
             <input
               value={form.defaultResidence || ''}
               onChange={e => handleChange('defaultResidence', e.target.value)}
@@ -165,13 +167,13 @@ const SchoolSettingsModal: React.FC<Props> = ({ onClose }) => {
             />
           </div>
 
-          <p className="text-xs text-gray-400">※ ここで設定した情報は証明書の発行に使用されます。</p>
+          <p className="text-xs text-gray-400">※ {tr('settingsNoteLabel')}</p>
         </div>
 
         <div className="px-5 py-3 bg-gray-50 border-t flex justify-end gap-2 shrink-0">
-          <button onClick={onClose} className="px-4 py-2 border rounded text-sm text-gray-600 hover:bg-gray-100">キャンセル</button>
+          <button onClick={onClose} className="px-4 py-2 border rounded text-sm text-gray-600 hover:bg-gray-100">{tr('cancelLabel')}</button>
           <button onClick={handleSave} className="px-4 py-2 bg-indigo-600 text-white rounded text-sm font-bold hover:bg-indigo-700 flex items-center gap-2">
-            <Save size={15} /> 保存する
+            <Save size={15} /> {tr('saveLabel')}
           </button>
         </div>
       </div>

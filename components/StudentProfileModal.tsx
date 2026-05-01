@@ -4,6 +4,7 @@ import { X, FileText, CheckCircle, XCircle, AlertTriangle, Printer, Mail } from 
 import CertificateModal, { CertType } from './CertificateModal';
 import { loadSchoolSettings } from './SchoolSettingsModal';
 import { sendTuitionReminder } from '../utils/sendEmail';
+import { useTr } from '../i18n/translations';
 
 interface StudentProfileModalProps {
   student: Student | null;
@@ -28,13 +29,6 @@ const CAREER_MILESTONE_LABELS: Record<string, string> = {
 
 type TabId = 'basic' | 'academic' | 'visa' | 'life';
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: 'basic', label: '基本・本人' },
-  { id: 'academic', label: '学籍・財務' },
-  { id: 'visa', label: '签証・進路' },
-  { id: 'life', label: '生活・指導' },
-];
-
 const Row: React.FC<{ label: string; value?: React.ReactNode }> = ({ label, value }) => (
   <div className="flex gap-2 py-1.5 border-b border-gray-100 text-sm">
     <span className="w-36 shrink-0 text-gray-500 font-medium">{label}</span>
@@ -43,6 +37,15 @@ const Row: React.FC<{ label: string; value?: React.ReactNode }> = ({ label, valu
 );
 
 const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onClose, onUpdateStudent }) => {
+  const { tr } = useTr();
+
+  const TABS: { id: TabId; label: string }[] = [
+    { id: 'basic', label: tr('tabBasic') },
+    { id: 'academic', label: tr('tabAcademic') },
+    { id: 'visa', label: tr('tabVisa') },
+    { id: 'life', label: tr('tabLife') },
+  ];
+
   const [reportMode, setReportMode] = useState(false);
   const [certType, setCertType] = useState<CertType | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>('basic');
@@ -388,44 +391,43 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onCl
                   </div>
                 </div>
               </div>
-              <Row label="氏名" value={student.name} />
-              {student.nameRomaji && <Row label="ローマ字氏名" value={student.nameRomaji} />}
-              <Row label="学籍番号" value={student.studentId} />
-              <Row label="性別" value={student.gender} />
-              <Row label="年齢" value={`${student.age} 歳`} />
-              <Row label="生年月日" value={student.birthDate || undefined} />
-              <Row label="国籍" value={student.nationality} />
-              <Row label="母語" value={student.motherTongue} />
-              <Row label="入学日" value={student.enrollmentDate} />
-              <Row label="クラス" value={student.className} />
-              <Row label="年次" value={student.grade} />
+              <Row label={tr('nameLabel')} value={student.name} />
+              {student.nameRomaji && <Row label={tr('romajiLabel')} value={student.nameRomaji} />}
+              <Row label={tr('studentIdLabel')} value={student.studentId} />
+              <Row label={tr('genderLabel')} value={student.gender} />
+              <Row label={tr('ageLabel')} value={`${student.age}`} />
+              <Row label={tr('birthDateLabel')} value={student.birthDate || undefined} />
+              <Row label={tr('nationalityLabel')} value={student.nationality} />
+              <Row label={tr('motherTongueLabel')} value={student.motherTongue} />
+              <Row label={tr('enrollmentDateLabel')} value={student.enrollmentDate} />
+              <Row label={tr('classLabel')} value={student.className} />
+              <Row label={tr('gradeLabel')} value={student.grade} />
 
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-4 mb-1">緊急連絡先</p>
-              <Row label="氏名" value={student.emergencyContact?.name} />
-              <Row label="続柄" value={student.emergencyContact?.relationship} />
-              <Row label="電話番号" value={student.emergencyContact?.phone} />
-              <Row label="メール" value={student.emergencyContact?.email} />
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-4 mb-1">{tr('emergencyContactLabel')}</p>
+              <Row label={tr('nameLabel')} value={student.emergencyContact?.name} />
+              <Row label={tr('relationshipLabel')} value={student.emergencyContact?.relationship} />
+              <Row label={tr('phoneLabel')} value={student.emergencyContact?.phone} />
+              <Row label={tr('emailLabel')} value={student.emergencyContact?.email} />
             </div>
           )}
 
           {/* === 学籍・財務 === */}
           {activeTab === 'academic' && (
             <div className="space-y-1">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">学籍</p>
-              <Row label="出席率" value={
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{tr('academicLabel')}</p>
+              <Row label={tr('attendanceRateLabel')} value={
                 <span className={student.attendanceRate < 80 ? 'text-red-600 font-bold' : 'text-green-700 font-bold'}>
                   {student.attendanceRate}%
                 </span>
               } />
-              <Row label="先月出席率" value={`${student.attendanceLastMonth}%`} />
-              <Row label="JLPT" value={student.jlptLevel} />
-              <Row label="GPA" value={`${student.academicInfo.gpa} / 4.0`} />
-              <Row label="単位修得" value={student.academicInfo.creditsEarned ? '済み' : '未修得'} />
+              <Row label={tr('lastMonthLabel')} value={`${student.attendanceLastMonth}%`} />
+              <Row label={tr('jlptLabel')} value={student.jlptLevel} />
+              <Row label={tr('gpaLabel')} value={`${student.academicInfo.gpa} / 4.0`} />
 
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-4 mb-2">財務</p>
-              <Row label="学費状況" value={student.tuitionStatus} />
-              <Row label="残金" value={student.tuitionBalance !== undefined ? `¥${student.tuitionBalance.toLocaleString()}` : undefined} />
-              <Row label="次回納付期限" value={student.nextTuitionDeadline} />
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-4 mb-2">{tr('financeLabel')}</p>
+              <Row label={tr('tuitionStatusLabel')} value={student.tuitionStatus} />
+              <Row label={tr('balanceLabel')} value={student.tuitionBalance !== undefined ? `¥${student.tuitionBalance.toLocaleString()}` : undefined} />
+              <Row label={tr('deadlineLabel')} value={student.nextTuitionDeadline} />
 
               {(student.tuitionStatus === TuitionStatus.UNPAID || student.tuitionStatus === TuitionStatus.PARTIAL) && (
                 <div className="mt-3">
@@ -458,7 +460,7 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onCl
 
               {(student.tuitionHistory?.length ?? 0) > 0 && (
                 <div className="mt-3">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">納付履歴</p>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{tr('tuitionHistoryLabel')}</p>
                   <div className="space-y-1">
                     {student.tuitionHistory.map((entry, i) => (
                       <div key={i} className="flex justify-between text-xs bg-gray-50 px-3 py-1.5 rounded">
@@ -482,16 +484,16 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onCl
           {/* === 签証・進路 === */}
           {activeTab === 'visa' && (
             <div className="space-y-1">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">ビザ・在留</p>
-              <Row label="ビザ期限" value={student.visaExpiry} />
-              <Row label="ビザ状態" value={student.visaStatus} />
-              <Row label="在留カード番号" value={student.zairyuCardNumber} />
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{tr('tabVisa')}</p>
+              <Row label={tr('visaExpiryLabel')} value={student.visaExpiry} />
+              <Row label={tr('visaStatusLabel')} value={student.visaStatus} />
+              <Row label={tr('residenceCardLabel')} value={student.zairyuCardNumber} />
 
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-4 mb-2">進路・就活</p>
-              <Row label="就活状況" value={student.jobHuntingStatus} />
-              <Row label="内定先" value={student.targetCompany || '—'} />
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-4 mb-2">{tr('jobHuntingLabel')}</p>
+              <Row label={tr('jobHuntingLabel')} value={student.jobHuntingStatus} />
+              <Row label={tr('jobOfferLabel')} value={student.targetCompany || '—'} />
 
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-4 mb-2">ビザ書類チェックリスト</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-4 mb-2">{tr('visaChecklistLabel')}</p>
               <div className="grid grid-cols-2 gap-2 mt-1 mb-3">
                 {Object.entries(student.visaChecklist).map(([k, v]) => (
                   <div key={k} className={`flex items-center gap-2 text-sm ${v ? 'text-green-700' : 'text-gray-400'}`}>
@@ -503,7 +505,7 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onCl
                 ))}
               </div>
 
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-4 mb-2">就活マイルストーン</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-4 mb-2">{tr('careerMilestonesLabel')}</p>
               <div className="grid grid-cols-2 gap-2 mt-1">
                 {Object.entries(student.careerMilestones).map(([k, v]) => (
                   <div key={k} className={`flex items-center gap-2 text-sm ${v ? 'text-green-700' : 'text-gray-400'}`}>
@@ -517,9 +519,9 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onCl
 
               {(student.withdrawalDate || student.withdrawalReason) && (
                 <>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-4 mb-2">退学情報</p>
-                  <Row label="退学日" value={student.withdrawalDate} />
-                  <Row label="退学理由" value={student.withdrawalReason} />
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-4 mb-2">{tr('withdrawalDateLabel')}</p>
+                  <Row label={tr('withdrawalDateLabel')} value={student.withdrawalDate} />
+                  <Row label={tr('withdrawalReasonLabel')} value={student.withdrawalReason} />
                 </>
               )}
             </div>
@@ -528,30 +530,29 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onCl
           {/* === 生活・指導 === */}
           {activeTab === 'life' && (
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">生活</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{tr('lifestyleLabel')}</p>
               <div className="space-y-1 mb-4">
-                <Row label="通学方法" value={student.commuteMethod} />
-                <Row label="自転車登録番号" value={student.bikeRegNumber} />
-                <Row label="住居" value={student.housingType} />
-                <Row label="家賃状況" value={student.rentStatus} />
-                <Row label="保証人" value={student.guarantorName ? `${student.guarantorName}　${student.guarantorPhone}` : undefined} />
-                <Row label="健康保険" value={student.nationalHealthInsurance} />
+                <Row label={tr('commuteLabel')} value={student.commuteMethod} />
+                <Row label={tr('housingLabel')} value={student.housingType} />
+                <Row label={tr('rentLabel')} value={student.rentStatus} />
+                <Row label={tr('guarantorLabel')} value={student.guarantorName ? `${student.guarantorName}　${student.guarantorPhone}` : undefined} />
+                <Row label={tr('healthInsuranceLabel')} value={student.nationalHealthInsurance} />
               </div>
 
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">アルバイト情報</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{tr('partTimeLabel')}</p>
               <div className="space-y-1 mb-4">
-                <Row label="勤務先" value={student.workInfo.location} />
-                <Row label="職種" value={student.workInfo.jobTitle} />
-                <Row label="曜日" value={student.workInfo.days?.join('・')} />
-                <Row label="勤務時間" value={student.workInfo.startTime && student.workInfo.endTime ? `${student.workInfo.startTime} 〜 ${student.workInfo.endTime}` : undefined} />
-                <Row label="週時間" value={student.workInfo.hoursPerWeek ? `${student.workInfo.hoursPerWeek} 時間` : undefined} />
-                <Row label="時給" value={student.workInfo.hourlyWage ? `¥${student.workInfo.hourlyWage.toLocaleString()}` : undefined} />
+                <Row label={tr('workplaceLabel')} value={student.workInfo.location} />
+                <Row label={tr('jobTypeLabel')} value={student.workInfo.jobTitle} />
+                <Row label={tr('workDaysLabel')} value={student.workInfo.days?.join('・')} />
+                <Row label={tr('workHoursLabel')} value={student.workInfo.startTime && student.workInfo.endTime ? `${student.workInfo.startTime} 〜 ${student.workInfo.endTime}` : undefined} />
+                <Row label={tr('weeklyHoursLabel')} value={student.workInfo.hoursPerWeek ? `${student.workInfo.hoursPerWeek}h` : undefined} />
+                <Row label={tr('hourlyWageLabel')} value={student.workInfo.hourlyWage ? `¥${student.workInfo.hourlyWage.toLocaleString()}` : undefined} />
               </div>
 
               {/* Warning History */}
               {student.warningHistory.length > 0 && (
                 <div className="mb-4 border border-red-200 bg-red-50 p-3 rounded">
-                  <h4 className="font-bold text-red-700 mb-2 flex items-center gap-1.5 text-sm"><AlertTriangle size={15} /> 指導・違反履歴</h4>
+                  <h4 className="font-bold text-red-700 mb-2 flex items-center gap-1.5 text-sm"><AlertTriangle size={15} /> {tr('warningHistoryLabel')}</h4>
                   <ul className="space-y-1">
                     {student.warningHistory.map(w => (
                       <li key={w.id} className="flex gap-2 text-sm">
@@ -566,7 +567,7 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onCl
 
               {/* Counseling Records */}
               <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
-                <h4 className="font-bold text-yellow-800 mb-2 text-sm">面談記録</h4>
+                <h4 className="font-bold text-yellow-800 mb-2 text-sm">{tr('counselingLabel')}</h4>
                 <div className="space-y-2 max-h-48 overflow-y-auto mb-2">
                   {student.counselingRecords.length > 0
                     ? student.counselingRecords.map(r => (
@@ -581,7 +582,7 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onCl
                   <div className="flex gap-2 mt-2">
                     <input value={newLogTeacher} onChange={e => setNewLogTeacher(e.target.value)} placeholder="担当者" className="border rounded p-1.5 text-xs w-24" />
                     <input value={newLogSummary} onChange={e => setNewLogSummary(e.target.value)} placeholder="記録内容" className="border rounded p-1.5 text-xs flex-1" />
-                    <button onClick={handleAddLog} className="bg-yellow-500 text-white text-xs px-3 rounded">追加</button>
+                    <button onClick={handleAddLog} className="bg-yellow-500 text-white text-xs px-3 rounded">{tr('addLabel')}</button>
                   </div>
                 )}
               </div>

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Student } from '../types';
-import { Calendar, ChevronLeft, ChevronRight, Check, X, Minus, Download } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { useTr } from '../i18n/translations';
 
 interface AttendanceManagerProps {
   students: Student[];
@@ -8,6 +9,7 @@ interface AttendanceManagerProps {
 }
 
 type AttendanceRecord = Record<string, Record<string, 'present' | 'absent' | 'late' | 'excused'>>;
+type StatusType = 'present' | 'absent' | 'late' | 'excused';
 
 const ATTENDANCE_KEY = 'sms_attendance_v1';
 
@@ -24,30 +26,33 @@ function saveAttendance(data: AttendanceRecord) {
 }
 
 const STATUS_CONFIG = {
-  present: { label: '出', color: 'bg-green-500 text-white', icon: Check },
-  absent: { label: '欠', color: 'bg-red-500 text-white', icon: X },
-  late: { label: '遅', color: 'bg-yellow-400 text-yellow-900', icon: Minus },
-  excused: { label: '公', color: 'bg-blue-400 text-white', icon: Check },
+  present: { csvLabel: '出', color: 'bg-green-500 text-white' },
+  absent:  { csvLabel: '欠', color: 'bg-red-500 text-white' },
+  late:    { csvLabel: '遅', color: 'bg-yellow-400 text-yellow-900' },
+  excused: { csvLabel: '公', color: 'bg-blue-400 text-white' },
 } as const;
 
-type StatusType = keyof typeof STATUS_CONFIG;
+const CYCLE: StatusType[] = ['present', 'absent', 'late', 'excused'];
 
 const AttendanceManager: React.FC<AttendanceManagerProps> = ({ students, onUpdateStudent }) => {
+  const { tr, lang } = useTr();
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
   const [attendance, setAttendance] = useState<AttendanceRecord>(loadAttendance);
   const [classFilter, setClassFilter] = useState('');
 
+  const DOW_LABELS = lang === 'en'
+    ? ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+    : ['日', '月', '火', '水', '木', '金', '土'];
+
   const daysInMonth = useMemo(() => {
-    const days = [];
+    const days: number[] = [];
     const d = new Date(year, month + 1, 0).getDate();
     for (let i = 1; i <= d; i++) {
       const date = new Date(year, month, i);
       const dow = date.getDay();
-      if (dow !== 0 && dow !== 6) { // Weekdays only
-        days.push(i);
-      }
+      if (dow !== 0 && dow !== 6) days.push(i);
     }
     return days;
   }, [year, month]);
@@ -62,28 +67,19 @@ const AttendanceManager: React.FC<AttendanceManagerProps> = ({ students, onUpdat
     [students]
   );
 
-  const dateKey = (day: number) => `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  const dateKey = (day: number) =>
+    `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-  const toggleStatus = (studentId: string, day: number) => {
+  const updateCell = (studentId: string, day: number, next: StatusType | undefined) => {
     const key = dateKey(day);
-    const current = attendance[studentId]?.[key];
-    const order: (StatusType | undefined)[] = [undefined, 'present', 'absent', 'late', 'excused'];
-    const next = order[(order.indexOf(current) + 1) % order.length];
-
-    const updated = {
+    const updated: AttendanceRecord = {
       ...attendance,
-      [studentId]: {
-        ...attendance[studentId],
-        [key]: next as StatusType,
-      }
+      [studentId]: { ...attendance[studentId], [key]: next as StatusType },
     };
-    if (!next) {
-      delete updated[studentId][key];
-    }
+    if (!next) delete updated[studentId][key];
     setAttendance(updated);
     saveAttendance(updated);
 
-    // 当月出席率を再計算して学生データに反映
     const student = students.find(s => s.id === studentId);
     if (student) {
       const records = updated[studentId] || {};
@@ -96,6 +92,20 @@ const AttendanceManager: React.FC<AttendanceManagerProps> = ({ students, onUpdat
       const newRate = total > 0 ? Math.round((presentCount / total) * 100) : 0;
       onUpdateStudent({ ...student, attendanceRate: newRate });
     }
+  };
+
+  const handleCellClick = (e: React.MouseEvent, studentId: string, day: number) => {
+    e.stopPropagation();
+    const current = attendance[studentId]?.[dateKey(day)] as StatusType | undefined;
+    const idx = current ? CYCLE.indexOf(current) : -1;
+    const next = CYCLE[(idx + 1) % CYCLE.length];
+    updateCell(studentId, day, next);
+  };
+
+  const handleCellRightClick = (e: React.MouseEvent, studentId: string, day: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    updateCell(studentId, day, undefined);
   };
 
   const getMonthStats = (studentId: string) => {
@@ -112,6 +122,20 @@ const AttendanceManager: React.FC<AttendanceManagerProps> = ({ students, onUpdat
     return { present, absent, late, rate };
   };
 
+  const DISPLAY_LABELS: Record<StatusType, string> = {
+    present: tr('presentLabel'),
+    absent:  tr('absentLabel'),
+    late:    tr('lateLabel'),
+    excused: tr('excusedLabel'),
+  };
+
+  const FULL_LABELS: Record<StatusType, string> = {
+    present: tr('presentFull'),
+    absent:  tr('absentFull'),
+    late:    tr('lateFull'),
+    excused: tr('excusedFull'),
+  };
+
   const exportCSV = () => {
     const headers = ['学籍番号', '氏名', 'クラス', ...daysInMonth.map(d => `${month + 1}/${d}`), '出席率'];
     const rows = filteredStudents.map(s => {
@@ -119,14 +143,14 @@ const AttendanceManager: React.FC<AttendanceManagerProps> = ({ students, onUpdat
       return [
         s.studentId, s.name, s.className,
         ...daysInMonth.map(d => {
-          const st = attendance[s.id]?.[dateKey(d)];
-          return st ? STATUS_CONFIG[st].label : '-';
+          const st = attendance[s.id]?.[dateKey(d)] as StatusType | undefined;
+          return st ? STATUS_CONFIG[st].csvLabel : '-';
         }),
-        `${stats.rate}%`
+        `${stats.rate}%`,
       ];
     });
     const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
-    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `attendance_${year}_${String(month + 1).padStart(2, '0')}.csv`;
@@ -139,28 +163,39 @@ const AttendanceManager: React.FC<AttendanceManagerProps> = ({ students, onUpdat
       <div className="bg-white border-b border-gray-200 p-4 flex flex-wrap gap-4 items-center justify-between">
         <div className="flex items-center gap-3">
           <Calendar size={20} className="text-indigo-600" />
-          <button onClick={() => { if (month === 0) { setMonth(11); setYear(y => y - 1); } else setMonth(m => m - 1); }} className="p-1 rounded hover:bg-gray-100">
+          <button
+            onClick={() => { if (month === 0) { setMonth(11); setYear(y => y - 1); } else setMonth(m => m - 1); }}
+            className="p-1 rounded hover:bg-gray-100"
+          >
             <ChevronLeft size={20} />
           </button>
-          <span className="font-bold text-lg w-28 text-center">{year}年 {month + 1}月</span>
-          <button onClick={() => { if (month === 11) { setMonth(0); setYear(y => y + 1); } else setMonth(m => m + 1); }} className="p-1 rounded hover:bg-gray-100">
+          <span className="font-bold text-lg w-28 text-center">
+            {lang === 'en' ? `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][month]} ${year}` : `${year}年 ${month + 1}月`}
+          </span>
+          <button
+            onClick={() => { if (month === 11) { setMonth(0); setYear(y => y + 1); } else setMonth(m => m + 1); }}
+            className="p-1 rounded hover:bg-gray-100"
+          >
             <ChevronRight size={20} />
           </button>
         </div>
         <div className="flex gap-3 items-center">
           <select value={classFilter} onChange={e => setClassFilter(e.target.value)} className="border rounded px-3 py-1.5 text-sm">
-            <option value="">全クラス</option>
+            <option value="">{tr('allClassesLabel')}</option>
             {classes.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
           <button onClick={exportCSV} className="flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white rounded text-sm hover:bg-green-700">
-            <Download size={14} /> CSV出力
+            <Download size={14} /> {tr('csvExportLabel')}
           </button>
         </div>
         {/* Legend */}
         <div className="flex gap-2 flex-wrap">
-          {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
-            <span key={key} className={`px-2 py-0.5 rounded text-xs font-bold ${cfg.color}`}>{cfg.label} = {key === 'present' ? '出席' : key === 'absent' ? '欠席' : key === 'late' ? '遅刻' : '公欠'}</span>
+          {(Object.keys(STATUS_CONFIG) as StatusType[]).map(key => (
+            <span key={key} className={`px-2 py-0.5 rounded text-xs font-bold ${STATUS_CONFIG[key].color}`}>
+              {DISPLAY_LABELS[key]} = {FULL_LABELS[key]}
+            </span>
           ))}
+          <span className="text-xs text-gray-400 self-center">{lang === 'en' ? '(right-click = clear)' : '(右クリック = クリア)'}</span>
         </div>
       </div>
 
@@ -169,18 +204,22 @@ const AttendanceManager: React.FC<AttendanceManagerProps> = ({ students, onUpdat
         <table className="w-full text-xs border-collapse bg-white">
           <thead className="sticky top-0 bg-gray-100 z-10">
             <tr>
-              <th className="border border-gray-200 p-2 text-left min-w-[140px] sticky left-0 bg-gray-100 z-20">学生</th>
+              <th className="border border-gray-200 p-2 text-left min-w-[140px] sticky left-0 bg-gray-100 z-20">
+                {lang === 'en' ? 'Student' : '学生'}
+              </th>
               {daysInMonth.map(d => {
                 const date = new Date(year, month, d);
                 const isToday = date.toDateString() === today.toDateString();
                 return (
                   <th key={d} className={`border border-gray-200 p-1 w-8 text-center ${isToday ? 'bg-indigo-100 text-indigo-700' : ''}`}>
                     <div className="font-bold">{d}</div>
-                    <div className="text-gray-400 font-normal">{'日月火水木金'[date.getDay()]}</div>
+                    <div className="text-gray-400 font-normal">{DOW_LABELS[date.getDay()]}</div>
                   </th>
                 );
               })}
-              <th className="border border-gray-200 p-2 min-w-[80px] text-center sticky right-0 bg-gray-100">出席率</th>
+              <th className="border border-gray-200 p-2 min-w-[80px] text-center sticky right-0 bg-gray-100">
+                {tr('attendanceRateLabel')}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -198,17 +237,18 @@ const AttendanceManager: React.FC<AttendanceManagerProps> = ({ students, onUpdat
                     return (
                       <td key={day} className="border border-gray-200 p-0 text-center">
                         <button
-                          onClick={() => toggleStatus(student.id, day)}
+                          onClick={e => handleCellClick(e, student.id, day)}
+                          onContextMenu={e => handleCellRightClick(e, student.id, day)}
                           className={`w-full h-8 text-xs font-bold transition-colors hover:opacity-80 ${cfg ? cfg.color : 'hover:bg-gray-100'}`}
                         >
-                          {cfg ? cfg.label : ''}
+                          {status ? DISPLAY_LABELS[status] : ''}
                         </button>
                       </td>
                     );
                   })}
                   <td className="border border-gray-200 p-2 text-center sticky right-0 bg-white">
                     <div className={`font-bold text-sm ${stats.rate < 80 ? 'text-red-600' : 'text-green-600'}`}>{stats.rate}%</div>
-                    <div className="text-gray-400 text-xs">{stats.absent}欠/{stats.late}遅</div>
+                    <div className="text-gray-400 text-xs">{stats.absent}{tr('absentLabel')}/{stats.late}{tr('lateLabel')}</div>
                   </td>
                 </tr>
               );

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Student, UserPermissions, TuitionStatus, WarningLevel, ExamRecord, Gender, WorkShift } from '../types';
 import { NATIONALITIES, MOTHER_TONGUES, WEEK_DAYS, JLPT_LEVELS, WORK_SHIFTS, TUITION_STATUSES, VISA_STATUSES, JOB_HUNTING_STATUSES, COMMUTE_METHODS, HOUSING_TYPES, PAYMENT_STATUSES, WARNING_LEVELS, INITIAL_STUDENT_STATE, GENDERS } from '../constants';
 import { Save, X, Upload, Lock, Plus, Trash2, Home, FileCheck, Briefcase, GraduationCap, Building, AlertTriangle, User, Clock, Wallet, Shield, Users, MapPin, Activity, FileImage, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, ZoomIn } from 'lucide-react';
+import { useTr } from '../i18n/translations';
 
 interface StudentFormModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface StudentFormModalProps {
 }
 
 const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, onSave, onDelete, editingStudent, permissions }) => {
+  const { tr } = useTr();
   const [formData, setFormData] = useState<Student>({ ...INITIAL_STUDENT_STATE, id: crypto.randomUUID() });
   const [customNat, setCustomNat] = useState('');
   const [customLang, setCustomLang] = useState('');
@@ -151,18 +153,18 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
         {/* Header */}
         <div className="p-4 bg-indigo-600 text-white flex justify-between items-center shrink-0">
             <h2 className="text-xl font-bold flex items-center gap-2">
-                <User size={24}/> 
-                {editingStudent ? '学生情報編集' : '新規学生登録'}
+                <User size={24}/>
+                {editingStudent ? tr('editLabel') : tr('addStudent')}
             </h2>
             <button onClick={onClose} className="hover:bg-indigo-500 p-1 rounded"><X size={24} /></button>
         </div>
 
         {/* Tabs */}
         <div className="flex border-b bg-white shrink-0 overflow-x-auto">
-            <TabButton id="basic" icon={User} label="基本・本人" />
-            <TabButton id="academic" icon={GraduationCap} label="学籍・財務" />
-            <TabButton id="career" icon={Briefcase} label="査証・進路" />
-            <TabButton id="compliance" icon={AlertTriangle} label="生活・指導" />
+            <TabButton id="basic" icon={User} label={tr('tabBasic')} />
+            <TabButton id="academic" icon={GraduationCap} label={tr('tabAcademic')} />
+            <TabButton id="career" icon={Briefcase} label={tr('tabVisa')} />
+            <TabButton id="compliance" icon={AlertTriangle} label={tr('tabLife')} />
         </div>
 
         {/* Content */}
@@ -207,29 +209,29 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                                 </div>
 
                                 <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div><label className="text-xs font-bold text-gray-500">氏名 *</label><input required placeholder="例: 王 小明" value={formData.name} onChange={e => handleChange('name', e.target.value)} className="w-full border p-2 rounded"/></div>
-                                    <div><label className="text-xs font-bold text-gray-500">学籍番号 *</label><input required placeholder="例: 2301001" value={formData.studentId} onChange={e => handleChange('studentId', e.target.value)} className="w-full border p-2 rounded"/></div>
-                                    <div className="md:col-span-2"><label className="text-xs font-bold text-gray-500">ローマ字氏名</label><input placeholder="例: YAMADA TARO" value={formData.nameRomaji || ''} onChange={e => handleChange('nameRomaji', e.target.value)} className="w-full border p-2 rounded"/></div>
-                                    
+                                    <div><label className="text-xs font-bold text-gray-500">{tr('nameLabel')} *</label><input required placeholder="例: 王 小明" value={formData.name} onChange={e => handleChange('name', e.target.value)} className="w-full border p-2 rounded"/></div>
+                                    <div><label className="text-xs font-bold text-gray-500">{tr('studentIdLabel')} *</label><input required placeholder="例: 2301001" value={formData.studentId} onChange={e => handleChange('studentId', e.target.value)} className="w-full border p-2 rounded"/></div>
+                                    <div className="md:col-span-2"><label className="text-xs font-bold text-gray-500">{tr('romajiLabel')}</label><input placeholder="例: YAMADA TARO" value={formData.nameRomaji || ''} onChange={e => handleChange('nameRomaji', e.target.value)} className="w-full border p-2 rounded"/></div>
+
                                     <div className="flex gap-2">
                                         <div className="flex-1">
-                                            <label className="text-xs font-bold text-gray-500">性別</label>
+                                            <label className="text-xs font-bold text-gray-500">{tr('genderLabel')}</label>
                                             <select value={formData.gender} onChange={e => handleChange('gender', e.target.value)} className="w-full border p-2 rounded">
                                                 {GENDERS.map(g => <option key={g} value={g}>{g}</option>)}
                                             </select>
                                         </div>
-                                        <div className="flex-1"><label className="text-xs font-bold text-gray-500">年齢</label><input type="number" value={formData.age} onChange={e => handleChange('age', parseInt(e.target.value))} className="w-full border p-2 rounded"/></div>
+                                        <div className="flex-1"><label className="text-xs font-bold text-gray-500">{tr('ageLabel')}</label><input type="number" value={formData.age} onChange={e => handleChange('age', parseInt(e.target.value))} className="w-full border p-2 rounded"/></div>
                                     </div>
-                                    <div><label className="text-xs font-bold text-gray-500">生年月日</label><input type="date" value={formData.birthDate || ''} onChange={e => handleChange('birthDate', e.target.value)} className="w-full border p-2 rounded"/></div>
+                                    <div><label className="text-xs font-bold text-gray-500">{tr('birthDateLabel')}</label><input type="date" value={formData.birthDate || ''} onChange={e => handleChange('birthDate', e.target.value)} className="w-full border p-2 rounded"/></div>
 
                                     <div className="flex gap-2">
-                                        <div className="flex-1"><label className="text-xs font-bold text-gray-500">クラス</label><input value={formData.className} onChange={e => handleChange('className', e.target.value)} className="w-full border p-2 rounded" placeholder="例: A1"/></div>
-                                        <div className="flex-1"><label className="text-xs font-bold text-gray-500">年次</label><input value={formData.grade} onChange={e => handleChange('grade', e.target.value)} className="w-full border p-2 rounded" placeholder="例: 1年生"/></div>
+                                        <div className="flex-1"><label className="text-xs font-bold text-gray-500">{tr('classLabel')}</label><input value={formData.className} onChange={e => handleChange('className', e.target.value)} className="w-full border p-2 rounded" placeholder="例: A1"/></div>
+                                        <div className="flex-1"><label className="text-xs font-bold text-gray-500">{tr('gradeLabel')}</label><input value={formData.grade} onChange={e => handleChange('grade', e.target.value)} className="w-full border p-2 rounded" placeholder="例: 1年生"/></div>
                                     </div>
-                                    <div><label className="text-xs font-bold text-gray-500">入学日</label><input type="date" value={formData.enrollmentDate} onChange={e => handleChange('enrollmentDate', e.target.value)} className="w-full border p-2 rounded"/></div>
-                                    
+                                    <div><label className="text-xs font-bold text-gray-500">{tr('enrollmentDateLabel')}</label><input type="date" value={formData.enrollmentDate} onChange={e => handleChange('enrollmentDate', e.target.value)} className="w-full border p-2 rounded"/></div>
+
                                     <div>
-                                        <label className="text-xs font-bold text-gray-500">国籍</label>
+                                        <label className="text-xs font-bold text-gray-500">{tr('nationalityLabel')}</label>
                                         <select value={NATIONALITIES.includes(formData.nationality) ? formData.nationality : 'その他 (手入力)'} onChange={e => handleChange('nationality', e.target.value)} className="w-full border p-2 rounded mb-1">
                                             {NATIONALITIES.map(n => <option key={n} value={n}>{n}</option>)}
                                         </select>
@@ -238,7 +240,7 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                                         )}
                                     </div>
                                     <div>
-                                        <label className="text-xs font-bold text-gray-500">母語</label>
+                                        <label className="text-xs font-bold text-gray-500">{tr('motherTongueLabel')}</label>
                                         <select value={MOTHER_TONGUES.includes(formData.motherTongue) ? formData.motherTongue : 'その他 (手入力)'} onChange={e => handleChange('motherTongue', e.target.value)} className="w-full border p-2 rounded mb-1">
                                             {MOTHER_TONGUES.map(n => <option key={n} value={n}>{n}</option>)}
                                         </select>
@@ -252,12 +254,12 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
 
                         {/* 2. Emergency Contact */}
                         <div className="bg-white p-6 rounded-lg shadow-sm border border-orange-100">
-                            <h3 className="text-lg font-bold text-orange-700 mb-4 border-b border-orange-100 pb-2 flex items-center gap-2"><Users size={20}/> 緊急連絡先</h3>
+                            <h3 className="text-lg font-bold text-orange-700 mb-4 border-b border-orange-100 pb-2 flex items-center gap-2"><Users size={20}/> {tr('emergencyContactLabel')}</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><label className="text-xs font-bold text-gray-500">氏名</label><input value={formData.emergencyContact.name} onChange={e => handleDeepChange('emergencyContact', 'name', e.target.value)} className="w-full border p-2 rounded" placeholder="例: 王 建国"/></div>
-                                <div><label className="text-xs font-bold text-gray-500">続柄</label><input value={formData.emergencyContact.relationship} onChange={e => handleDeepChange('emergencyContact', 'relationship', e.target.value)} className="w-full border p-2 rounded" placeholder="例: 父、母、兄"/></div>
-                                <div><label className="text-xs font-bold text-gray-500">電話番号</label><input value={formData.emergencyContact.phone} onChange={e => handleDeepChange('emergencyContact', 'phone', e.target.value)} className="w-full border p-2 rounded" placeholder="国番号付き推奨"/></div>
-                                <div><label className="text-xs font-bold text-gray-500">メールアドレス</label><input type="email" value={formData.emergencyContact.email} onChange={e => handleDeepChange('emergencyContact', 'email', e.target.value)} className="w-full border p-2 rounded" placeholder="任意"/></div>
+                                <div><label className="text-xs font-bold text-gray-500">{tr('nameLabel')}</label><input value={formData.emergencyContact.name} onChange={e => handleDeepChange('emergencyContact', 'name', e.target.value)} className="w-full border p-2 rounded" placeholder="例: 王 建国"/></div>
+                                <div><label className="text-xs font-bold text-gray-500">{tr('relationshipLabel')}</label><input value={formData.emergencyContact.relationship} onChange={e => handleDeepChange('emergencyContact', 'relationship', e.target.value)} className="w-full border p-2 rounded" placeholder="例: 父、母、兄"/></div>
+                                <div><label className="text-xs font-bold text-gray-500">{tr('phoneLabel')}</label><input value={formData.emergencyContact.phone} onChange={e => handleDeepChange('emergencyContact', 'phone', e.target.value)} className="w-full border p-2 rounded" placeholder="国番号付き推奨"/></div>
+                                <div><label className="text-xs font-bold text-gray-500">{tr('emailLabel')}</label><input type="email" value={formData.emergencyContact.email} onChange={e => handleDeepChange('emergencyContact', 'email', e.target.value)} className="w-full border p-2 rounded" placeholder="任意"/></div>
                             </div>
                         </div>
 
@@ -273,11 +275,11 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                             </h3>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><label className="text-xs font-bold text-gray-500">勤務先名称</label><input value={formData.workInfo.location} onChange={e => handleWorkChange('location', e.target.value)} className="w-full border p-2 rounded" placeholder="なしの場合は空欄"/></div>
-                                <div><label className="text-xs font-bold text-gray-500">職種/内容</label><input value={formData.workInfo.jobTitle} onChange={e => handleWorkChange('jobTitle', e.target.value)} className="w-full border p-2 rounded" placeholder="例: ホール、レジ"/></div>
-                                
+                                <div><label className="text-xs font-bold text-gray-500">{tr('workplaceLabel')}</label><input value={formData.workInfo.location} onChange={e => handleWorkChange('location', e.target.value)} className="w-full border p-2 rounded" placeholder="なしの場合は空欄"/></div>
+                                <div><label className="text-xs font-bold text-gray-500">{tr('jobTypeLabel')}</label><input value={formData.workInfo.jobTitle} onChange={e => handleWorkChange('jobTitle', e.target.value)} className="w-full border p-2 rounded" placeholder="例: ホール、レジ"/></div>
+
                                 <div className="md:col-span-2">
-                                    <label className="text-xs font-bold text-gray-500 mb-1 block">シフト曜日</label>
+                                    <label className="text-xs font-bold text-gray-500 mb-1 block">{tr('workDaysLabel')}</label>
                                     <div className="flex gap-2 flex-wrap">
                                         {WEEK_DAYS.map(day => (
                                             <button key={day.key} type="button" onClick={() => handleDayToggle(day.value)}
@@ -289,8 +291,8 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-4">
-                                    <div><label className="text-xs font-bold text-gray-500">週労働時間 (h)</label><input type="number" step="0.5" value={formData.workInfo.hoursPerWeek} onChange={e => handleWorkChange('hoursPerWeek', parseFloat(e.target.value))} className={`w-full border p-2 rounded ${formData.workInfo.hoursPerWeek > (formData.workInfo.isLongVacation ? 40 : 28) ? 'bg-red-50 border-red-300 text-red-600 font-bold' : ''}`}/></div>
-                                    <div><label className="text-xs font-bold text-gray-500">時給 (円)</label><input type="number" value={formData.workInfo.hourlyWage} onChange={e => handleWorkChange('hourlyWage', parseInt(e.target.value))} className="w-full border p-2 rounded"/></div>
+                                    <div><label className="text-xs font-bold text-gray-500">{tr('weeklyHoursLabel')} (h)</label><input type="number" step="0.5" value={formData.workInfo.hoursPerWeek} onChange={e => handleWorkChange('hoursPerWeek', parseFloat(e.target.value))} className={`w-full border p-2 rounded ${formData.workInfo.hoursPerWeek > (formData.workInfo.isLongVacation ? 40 : 28) ? 'bg-red-50 border-red-300 text-red-600 font-bold' : ''}`}/></div>
+                                    <div><label className="text-xs font-bold text-gray-500">{tr('hourlyWageLabel')}</label><input type="number" value={formData.workInfo.hourlyWage} onChange={e => handleWorkChange('hourlyWage', parseInt(e.target.value))} className="w-full border p-2 rounded"/></div>
                                     <div><label className="text-xs font-bold text-gray-500">勤務先電話番号</label><input value={formData.workInfo.phone} onChange={e => handleWorkChange('phone', e.target.value)} className="w-full border p-2 rounded" placeholder="緊急連絡用"/></div>
                                 </div>
 
@@ -314,18 +316,18 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                 {activeTab === 'academic' && (
                     <div className="space-y-6 animate-fade-in">
                         <div className="bg-white p-6 rounded-lg shadow-sm border">
-                            <h3 className="text-lg font-bold text-gray-700 mb-4 border-b pb-2 flex items-center gap-2"><GraduationCap size={20}/> 学籍・成績情報</h3>
+                            <h3 className="text-lg font-bold text-gray-700 mb-4 border-b pb-2 flex items-center gap-2"><GraduationCap size={20}/> {tr('academicLabel')}</h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
-                                    <label className="text-xs font-bold text-gray-500">JLPT レベル</label>
+                                    <label className="text-xs font-bold text-gray-500">{tr('jlptLabel')}</label>
                                     <select value={formData.jlptLevel} onChange={e => handleChange('jlptLevel', e.target.value)} className="w-full border p-2 rounded">
                                         {JLPT_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
                                     </select>
                                 </div>
-                                <div><label className="text-xs font-bold text-gray-500">出席率 (%)</label><input type="number" value={formData.attendanceRate} onChange={e => handleChange('attendanceRate', parseFloat(e.target.value))} className="w-full border p-2 rounded font-bold"/></div>
-                                <div><label className="text-xs font-bold text-gray-500">先月出席率 (%)</label><input type="number" value={formData.attendanceLastMonth} onChange={e => handleChange('attendanceLastMonth', parseFloat(e.target.value))} className="w-full border p-2 rounded"/></div>
-                                
-                                <div><label className="text-xs font-bold text-gray-500">専門GPA (0-4.0)</label><input type="number" step="0.1" value={formData.academicInfo.gpa} onChange={e => handleDeepChange('academicInfo', 'gpa', parseFloat(e.target.value))} className="w-full border p-2 rounded"/></div>
+                                <div><label className="text-xs font-bold text-gray-500">{tr('attendanceRateLabel')} (%)</label><input type="number" value={formData.attendanceRate} onChange={e => handleChange('attendanceRate', parseFloat(e.target.value))} className="w-full border p-2 rounded font-bold"/></div>
+                                <div><label className="text-xs font-bold text-gray-500">{tr('lastMonthLabel')} (%)</label><input type="number" value={formData.attendanceLastMonth} onChange={e => handleChange('attendanceLastMonth', parseFloat(e.target.value))} className="w-full border p-2 rounded"/></div>
+
+                                <div><label className="text-xs font-bold text-gray-500">{tr('gpaLabel')} (0-4.0)</label><input type="number" step="0.1" value={formData.academicInfo.gpa} onChange={e => handleDeepChange('academicInfo', 'gpa', parseFloat(e.target.value))} className="w-full border p-2 rounded"/></div>
                                 <div className="flex items-center pt-6">
                                     <label className="flex items-center gap-2 font-bold text-gray-700 cursor-pointer">
                                         <input type="checkbox" checked={formData.academicInfo.creditsEarned} onChange={e => handleDeepChange('academicInfo', 'creditsEarned', e.target.checked)} className="w-5 h-5 text-indigo-600"/>
@@ -349,10 +351,10 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                         </div>
 
                         <div className="bg-white p-6 rounded-lg shadow-sm border">
-                            <h3 className="text-lg font-bold text-gray-700 mb-4 border-b pb-2 flex items-center gap-2"><Wallet size={20}/> 財務管理</h3>
+                            <h3 className="text-lg font-bold text-gray-700 mb-4 border-b pb-2 flex items-center gap-2"><Wallet size={20}/> {tr('financeLabel')}</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-xs font-bold text-gray-500">学費納入状況</label>
+                                    <label className="text-xs font-bold text-gray-500">{tr('tuitionStatusLabel')}</label>
                                     <select value={formData.tuitionStatus} onChange={e => handleChange('tuitionStatus', e.target.value)} className="w-full border p-2 rounded">
                                         {TUITION_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                                     </select>
@@ -377,17 +379,17 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                             {/* 納付履歴 */}
                             <div className="mt-6">
                                 <div className="flex items-center justify-between mb-3">
-                                    <h4 className="text-sm font-bold text-gray-600">納付履歴</h4>
+                                    <h4 className="text-sm font-bold text-gray-600">{tr('tuitionHistoryLabel')}</h4>
                                     <button
                                         type="button"
                                         onClick={() => handleChange('tuitionHistory', [...(formData.tuitionHistory || []), { date: '', amount: 0, note: '' }])}
                                         className="flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded hover:bg-indigo-100 font-bold"
                                     >
-                                        <Plus size={12} /> 追加
+                                        <Plus size={12} /> {tr('addLabel')}
                                     </button>
                                 </div>
                                 {(formData.tuitionHistory || []).length === 0 && (
-                                    <p className="text-xs text-gray-400 text-center py-2">履歴はありません</p>
+                                    <p className="text-xs text-gray-400 text-center py-2">{tr('noHistoryLabel')}</p>
                                 )}
                                 <div className="space-y-2">
                                     {(formData.tuitionHistory || []).map((entry, idx) => (
@@ -447,13 +449,13 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                             <h3 className="text-lg font-bold text-gray-700 mb-4 border-b pb-2 flex items-center gap-2"><FileCheck size={20}/> ビザ・在留カード</h3>
                             
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                <div><label className="text-xs font-bold text-gray-500">在留カード番号</label><input value={formData.zairyuCardNumber} onChange={e => handleChange('zairyuCardNumber', e.target.value)} className="w-full border p-2 rounded" placeholder="AB12345678CD"/></div>
+                                <div><label className="text-xs font-bold text-gray-500">{tr('residenceCardLabel')}</label><input value={formData.zairyuCardNumber} onChange={e => handleChange('zairyuCardNumber', e.target.value)} className="w-full border p-2 rounded" placeholder="AB12345678CD"/></div>
                                 <div>
-                                    <label className="text-xs font-bold text-red-600">在留期限 (Expiry)</label>
+                                    <label className="text-xs font-bold text-red-600">{tr('visaExpiryLabel')}</label>
                                     <input type="date" value={formData.visaExpiry} onChange={e => handleChange('visaExpiry', e.target.value)} className="w-full border border-red-200 bg-red-50 p-2 rounded"/>
                                 </div>
                                 <div>
-                                    <label className="text-xs font-bold text-gray-500">ビザステータス</label>
+                                    <label className="text-xs font-bold text-gray-500">{tr('visaStatusLabel')}</label>
                                     <select value={formData.visaStatus} onChange={e => handleChange('visaStatus', e.target.value)} className="w-full border p-2 rounded">
                                         {VISA_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                                     </select>
@@ -496,12 +498,12 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                             <h3 className="text-lg font-bold text-gray-700 mb-4 border-b pb-2 flex items-center gap-2"><Briefcase size={20}/> 進路・就職</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
-                                    <label className="text-xs font-bold text-gray-500">就職活動ステータス</label>
+                                    <label className="text-xs font-bold text-gray-500">{tr('jobHuntingLabel')}</label>
                                     <select value={formData.jobHuntingStatus} onChange={e => handleChange('jobHuntingStatus', e.target.value)} className="w-full border p-2 rounded">
                                         {JOB_HUNTING_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                                     </select>
                                 </div>
-                                <div><label className="text-xs font-bold text-gray-500">志望企業/内定先</label><input value={formData.targetCompany} onChange={e => handleChange('targetCompany', e.target.value)} className="w-full border p-2 rounded"/></div>
+                                <div><label className="text-xs font-bold text-gray-500">{tr('jobOfferLabel')}</label><input value={formData.targetCompany} onChange={e => handleChange('targetCompany', e.target.value)} className="w-full border p-2 rounded"/></div>
                             </div>
                             <div className="flex flex-wrap gap-4 bg-blue-50 p-4 rounded border border-blue-100 mb-4">
                                 <label className="flex items-center gap-2 font-bold text-sm text-blue-800"><input type="checkbox" checked={formData.careerMilestones.resumeComplete} onChange={e => handleDeepChange('careerMilestones', 'resumeComplete', e.target.checked)}/> 履歴書完成</label>
@@ -515,11 +517,11 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-dashed border-gray-200">
                                 <div>
-                                    <label className="text-xs font-bold text-gray-500">退学日</label>
+                                    <label className="text-xs font-bold text-gray-500">{tr('withdrawalDateLabel')}</label>
                                     <input type="date" value={formData.withdrawalDate || ''} onChange={e => handleChange('withdrawalDate', e.target.value)} className="w-full border p-2 rounded"/>
                                 </div>
                                 <div>
-                                    <label className="text-xs font-bold text-gray-500">退学理由</label>
+                                    <label className="text-xs font-bold text-gray-500">{tr('withdrawalReasonLabel')}</label>
                                     <input value={formData.withdrawalReason || ''} onChange={e => handleChange('withdrawalReason', e.target.value)} className="w-full border p-2 rounded" placeholder="退学・転校・帰国等"/>
                                 </div>
                             </div>
@@ -548,7 +550,7 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                 {activeTab === 'compliance' && (
                     <div className="space-y-6 animate-fade-in">
                         <div className="bg-white p-6 rounded-lg shadow-sm border border-red-100">
-                            <h3 className="text-lg font-bold text-red-700 mb-4 border-b pb-2 flex items-center gap-2"><AlertTriangle size={20}/> 違反・指導履歴</h3>
+                            <h3 className="text-lg font-bold text-red-700 mb-4 border-b pb-2 flex items-center gap-2"><AlertTriangle size={20}/> {tr('warningHistoryLabel')}</h3>
                             {formData.warningHistory.length === 0 && <p className="text-gray-400 text-sm py-4 text-center">指導記録はありません</p>}
                             {formData.warningHistory.map(w => (
                                 <div key={w.id} className="flex gap-2 mb-3 items-start bg-red-50 p-2 rounded border border-red-100">
@@ -568,46 +570,37 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                             <h3 className="text-lg font-bold text-gray-700 mb-4 border-b pb-2 flex items-center gap-2"><Shield size={20}/> 生活安全・住居・通勤</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-xs font-bold text-gray-500">住居タイプ</label>
+                                    <label className="text-xs font-bold text-gray-500">{tr('housingLabel')}</label>
                                     <select value={formData.housingType} onChange={e => handleChange('housingType', e.target.value)} className="w-full border p-2 rounded">
                                         {HOUSING_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                                     </select>
                                 </div>
                                 {/* Commute Method (Restored) */}
                                 <div>
-                                    <label className="text-xs font-bold text-gray-500">通学方法</label>
+                                    <label className="text-xs font-bold text-gray-500">{tr('commuteLabel')}</label>
                                     <select value={formData.commuteMethod} onChange={e => handleChange('commuteMethod', e.target.value)} className="w-full border p-2 rounded">
                                         {COMMUTE_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
                                     </select>
                                 </div>
 
-                                <div className="md:col-span-2"><label className="text-xs font-bold text-gray-500">住所</label><input value={formData.workInfo.address} onChange={e => handleWorkChange('address', e.target.value)} className="w-full border p-2 rounded" placeholder="現住所"/></div>
-                                
-                                <div><label className="text-xs font-bold text-gray-500">家賃支払状況</label>
+                                <div className="md:col-span-2"><label className="text-xs font-bold text-gray-500">{tr('addressLabel')}</label><input value={formData.workInfo.address} onChange={e => handleWorkChange('address', e.target.value)} className="w-full border p-2 rounded" placeholder="現住所"/></div>
+
+                                <div><label className="text-xs font-bold text-gray-500">{tr('rentLabel')}</label>
                                      <select value={formData.rentStatus} onChange={e => handleChange('rentStatus', e.target.value)} className="w-full border p-2 rounded">
                                         {PAYMENT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                                     </select>
                                 </div>
-                                <div><label className="text-xs font-bold text-gray-500">国民健康保険</label>
+                                <div><label className="text-xs font-bold text-gray-500">{tr('healthInsuranceLabel')}</label>
                                      <select value={formData.nationalHealthInsurance} onChange={e => handleChange('nationalHealthInsurance', e.target.value)} className="w-full border p-2 rounded">
                                         {PAYMENT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                                     </select>
                                 </div>
-                                <div><label className="text-xs font-bold text-gray-500">自転車防犯登録番号</label><input value={formData.bikeRegNumber} onChange={e => handleChange('bikeRegNumber', e.target.value)} className="w-full border p-2 rounded"/></div>
-                                
-                                {/* Health Check (Restored) */}
-                                <div className="flex items-center pt-6">
-                                    <label className="flex items-center gap-2 font-bold text-gray-700 cursor-pointer">
-                                        <input type="checkbox" checked={formData.healthCheckStatus} onChange={e => handleChange('healthCheckStatus', e.target.checked)} className="w-5 h-5 text-indigo-600"/>
-                                        定期健康診断 受診済み
-                                    </label>
-                                </div>
                             </div>
-                            
+
                             {/* Guarantor Info */}
                             <div className="mt-4 pt-4 border-t grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><label className="text-xs font-bold text-gray-500">経費支弁者/保証人 氏名</label><input value={formData.guarantorName} onChange={e => handleChange('guarantorName', e.target.value)} className="w-full border p-2 rounded" placeholder="本国または日本の保証人"/></div>
-                                <div><label className="text-xs font-bold text-gray-500">保証人連絡先 (TEL)</label><input value={formData.guarantorPhone} onChange={e => handleChange('guarantorPhone', e.target.value)} className="w-full border p-2 rounded" placeholder="国番号付き推奨"/></div>
+                                <div><label className="text-xs font-bold text-gray-500">{tr('guarantorLabel')}</label><input value={formData.guarantorName} onChange={e => handleChange('guarantorName', e.target.value)} className="w-full border p-2 rounded" placeholder="本国または日本の保証人"/></div>
+                                <div><label className="text-xs font-bold text-gray-500">{tr('guarantorLabel')} (TEL)</label><input value={formData.guarantorPhone} onChange={e => handleChange('guarantorPhone', e.target.value)} className="w-full border p-2 rounded" placeholder="国番号付き推奨"/></div>
                             </div>
                         </div>
                     </div>
@@ -628,13 +621,13 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                     }} 
                     className="px-4 py-2 text-red-600 hover:bg-red-50 rounded font-bold border border-red-200 flex items-center gap-2"
                 >
-                    <Trash2 size={18}/> 削除
+                    <Trash2 size={18}/> {tr('deleteLabel')}
                 </button>
             )}
             <div className="flex gap-3 ml-auto">
-                <button onClick={onClose} className="px-6 py-2 bg-white border border-gray-300 rounded hover:bg-gray-50 font-medium text-gray-700">キャンセル</button>
+                <button onClick={onClose} className="px-6 py-2 bg-white border border-gray-300 rounded hover:bg-gray-50 font-medium text-gray-700">{tr('cancelLabel')}</button>
                 <button onClick={handleSubmit} className="px-8 py-2 bg-indigo-600 text-white rounded shadow-sm hover:bg-indigo-700 font-bold flex items-center gap-2">
-                    <Save size={18}/> 保存する
+                    <Save size={18}/> {tr('saveLabel')}
                 </button>
             </div>
         </div>
