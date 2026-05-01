@@ -73,6 +73,9 @@ const ja = {
   allTuition: '全ての学費状況',
   classPlaceholder: 'クラス',
 
+  // System title
+  systemTitle: '留学生管理システム',
+
   // Safety mode
   safetyModeLabel: '安否',
   scannerLabel: 'スキャン',
@@ -349,6 +352,9 @@ const en: typeof ja = {
   allJLPT: 'All JLPT',
   allTuition: 'All Tuition Status',
   classPlaceholder: 'Class',
+
+  // System title
+  systemTitle: 'Student Management System',
 
   // Safety mode
   safetyModeLabel: 'Safety',

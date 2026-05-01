@@ -350,7 +350,7 @@ const App: React.FC = () => {
             <div className="flex items-center gap-2">
               <GraduationCap size={22} className={safetyMode ? 'text-white' : 'text-indigo-600'} />
               <h1 className={`text-lg font-bold hidden md:block ${safetyMode ? 'text-white' : 'text-gray-800'}`}>
-                {safetyMode ? '🚨 安否確認・災害モード' : '留学生管理システム'}
+                {safetyMode ? tr('safetyEmergencyMode') : tr('systemTitle')}
               </h1>
             </div>
 
