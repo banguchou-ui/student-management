@@ -19,7 +19,7 @@ import EmailSettingsModal from './components/EmailSettingsModal';
 import { ShieldAlert, Download, Users, Briefcase, LogOut, Key, Settings, Plus, Upload, Database, Siren, CheckSquare, Trash2, Sun, FileDown, FileUp, ScanBarcode, XCircle, LayoutDashboard, CalendarDays, Bell, GraduationCap, UserCog, School, FileSpreadsheet, ClipboardList, ChevronDown, BarChart2, Mail } from 'lucide-react';
 import { exportStudentsToExcel, exportImmigrationReport, exportAdmissionReport } from './utils/exportExcel';
 import { loadSchoolSettings } from './components/SchoolSettingsModal';
-import { getLang, setLang, Lang, LangContext, useTr } from './i18n/translations';
+import { LangContext, useTr } from './i18n/translations';
 
 type TabType = 'students' | 'attendance' | 'notices' | 'stats';
 
@@ -48,13 +48,6 @@ const App: React.FC = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const restoreInputRef = useRef<HTMLInputElement>(null);
-  const [lang, setLangState] = useState<Lang>(getLang);
-
-  const toggleLang = () => {
-    const next: Lang = lang === 'ja' ? 'en' : 'ja';
-    setLang(next);
-    setLangState(next);
-  };
 
   const { tr } = useTr();
   const [showImmigrationMenu, setShowImmigrationMenu] = useState(false);
@@ -126,8 +119,21 @@ const App: React.FC = () => {
 
       if (student) {
           audioRef.current?.play().catch(e => console.error("Audio play failed", e));
+
+          // 今日の日付で出席を記録（AttendanceManager と同じ localStorage キー/フォーマット）
+          const today = new Date();
+          const dateKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+          try {
+              const raw = localStorage.getItem('sms_attendance_v1');
+              const attendance = raw ? JSON.parse(raw) : {};
+              if (!attendance[student.id]) attendance[student.id] = {};
+              attendance[student.id][dateKey] = 'present';
+              localStorage.setItem('sms_attendance_v1', JSON.stringify(attendance));
+          } catch (e) {
+              console.error('出席記録の保存に失敗:', e);
+          }
+
           setScanLog(prev => [{ id: cleanId, name: student.name, time, status: 'success' }, ...prev].slice(0, 10));
-          // Here you would typically update the backend attendance record
       } else {
           setScanLog(prev => [{ id: cleanId, name: tr('noData'), time, status: 'error' }, ...prev].slice(0, 10));
       }
@@ -341,7 +347,7 @@ const App: React.FC = () => {
   if (!currentUser) return <LoginPage onLogin={handleLogin} />;
 
   return (
-    <LangContext.Provider value={lang}>
+    <LangContext.Provider value="ja">
     <div className={`flex h-screen w-full font-sans text-gray-900 overflow-hidden ${safetyMode ? 'bg-red-50' : 'bg-gray-100'}`}>
       <div className="flex-1 flex flex-col h-full w-full">
         {/* Header */}
@@ -543,8 +549,7 @@ const App: React.FC = () => {
              </div>
 
              {currentUser.permissions.canManageUsers && <button onClick={() => setShowUserMgmt(true)} className="p-2 text-gray-500 hover:text-purple-600" title="ユーザー管理"><UserCog size={18} /></button>}
-             <button onClick={toggleLang} className="p-1.5 text-xs font-bold text-gray-500 hover:text-indigo-600 border border-gray-200 rounded" title="言語切替">{tr('langToggle')}</button>
-             <button onClick={() => setShowSchoolSettings(true)} className="p-2 text-gray-500 hover:text-indigo-600" title="学校設定"><Settings size={18} /></button>
+<button onClick={() => setShowSchoolSettings(true)} className="p-2 text-gray-500 hover:text-indigo-600" title="学校設定"><Settings size={18} /></button>
           </div>
         </header>
 
@@ -639,12 +644,12 @@ const App: React.FC = () => {
                               <div className="flex items-center gap-4">
                                   <span className="text-white/50 font-mono text-sm">{log.time}</span>
                                   <span className={`font-bold text-lg ${log.status === 'success' ? 'text-white' : 'text-red-300'}`}>
-                                      {log.name}
+                                      {log.status === 'success' ? `${log.name}さん` : log.name}
                                   </span>
-                                  <span className="text-white/50 text-sm">({log.id})</span>
+                                  {log.status === 'error' && <span className="text-white/50 text-sm">({log.id})</span>}
                               </div>
-                              <span className={`font-bold px-2 py-1 rounded text-xs ${log.status === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
-                                  {log.status === 'success' ? 'OK' : 'ERROR'}
+                              <span className={`font-bold px-3 py-1 rounded text-sm ${log.status === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
+                                  {log.status === 'success' ? '出席登録完了 ✓' : '未登録'}
                               </span>
                           </div>
                       ))}
