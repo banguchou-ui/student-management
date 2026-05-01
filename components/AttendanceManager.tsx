@@ -32,7 +32,7 @@ const STATUS_CONFIG = {
   excused: { csvLabel: '公', color: 'bg-blue-400 text-white' },
 } as const;
 
-const CYCLE: StatusType[] = ['present', 'absent', 'late', 'excused'];
+const CYCLE: (StatusType | undefined)[] = [undefined, 'present', 'absent', 'late', 'excused'];
 
 const AttendanceManager: React.FC<AttendanceManagerProps> = ({ students, onUpdateStudent }) => {
   const { tr, lang } = useTr();
@@ -97,7 +97,7 @@ const AttendanceManager: React.FC<AttendanceManagerProps> = ({ students, onUpdat
   const handleCellClick = (e: React.MouseEvent, studentId: string, day: number) => {
     e.stopPropagation();
     const current = attendance[studentId]?.[dateKey(day)] as StatusType | undefined;
-    const idx = current ? CYCLE.indexOf(current) : -1;
+    const idx = CYCLE.indexOf(current);
     const next = CYCLE[(idx + 1) % CYCLE.length];
     updateCell(studentId, day, next);
   };

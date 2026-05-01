@@ -138,7 +138,7 @@ const SchoolSettingsModal: React.FC<Props> = ({ onClose }) => {
             />
           </div>
           <div>
-            <label className="text-xs font-bold text-gray-500 block mb-1">電話番号</label>
+            <label className="text-xs font-bold text-gray-500 block mb-1">{tr('phoneLabel')}</label>
             <input
               value={form.phone}
               onChange={e => handleChange('phone', e.target.value)}

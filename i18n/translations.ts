@@ -294,6 +294,10 @@ const ja = {
   creditsFullLabel: '単位満了',
   safetyOkLabel: '安否OK',
 
+  // Counseling form placeholders
+  staffLabel: '担当者',
+  notesLabel: '記録内容',
+
   // Common
   noData: 'データなし',
   loading: '読み込み中...',
@@ -566,6 +570,10 @@ const en: typeof ja = {
   bankInfoTitle: 'Bank Info',
   creditsFullLabel: 'Credits Completed',
   safetyOkLabel: 'Safety OK',
+
+  // Counseling form placeholders
+  staffLabel: 'Staff',
+  notesLabel: 'Notes',
 
   // Common
   noData: 'No data',

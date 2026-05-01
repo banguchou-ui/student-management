@@ -580,8 +580,8 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onCl
                 </div>
                 {onUpdateStudent && (
                   <div className="flex gap-2 mt-2">
-                    <input value={newLogTeacher} onChange={e => setNewLogTeacher(e.target.value)} placeholder="担当者" className="border rounded p-1.5 text-xs w-24" />
-                    <input value={newLogSummary} onChange={e => setNewLogSummary(e.target.value)} placeholder="記録内容" className="border rounded p-1.5 text-xs flex-1" />
+                    <input value={newLogTeacher} onChange={e => setNewLogTeacher(e.target.value)} placeholder={tr('staffLabel')} className="border rounded p-1.5 text-xs w-24" />
+                    <input value={newLogSummary} onChange={e => setNewLogSummary(e.target.value)} placeholder={tr('notesLabel')} className="border rounded p-1.5 text-xs flex-1" />
                     <button onClick={handleAddLog} className="bg-yellow-500 text-white text-xs px-3 rounded">{tr('addLabel')}</button>
                   </div>
                 )}
