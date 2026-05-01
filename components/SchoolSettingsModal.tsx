@@ -56,7 +56,7 @@ const SchoolSettingsModal: React.FC<Props> = ({ onClose }) => {
 
   const handleSave = () => {
     saveSchoolSettings(form);
-    alert('学校設定を保存しました。');
+    alert(tr('settingSavedLabel'));
     onClose();
   };
 
@@ -95,7 +95,7 @@ const SchoolSettingsModal: React.FC<Props> = ({ onClose }) => {
                     onClick={() => handleChange('logoBase64', '')}
                     className="mt-2 text-xs text-red-500 hover:text-red-700"
                   >
-                    削除
+                    {tr('deleteLogoLabel')}
                   </button>
                 )}
                 <p className="text-xs text-gray-400 mt-1">PNG / JPG 推奨</p>

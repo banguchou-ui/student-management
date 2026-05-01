@@ -88,10 +88,10 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onCl
         {/* Toolbar */}
         <div className="no-print sticky top-0 z-10 bg-gray-900 text-white px-6 py-3 flex items-center gap-3">
           <button onClick={() => window.print()} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-bold">
-            <Printer size={15} /> 印刷
+            <Printer size={15} /> {tr('printLabel')}
           </button>
           <button onClick={() => setReportMode(false)} className="flex items-center gap-2 bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded text-sm">
-            閉じる
+            {tr('closeLabel')}
           </button>
           <span className="text-gray-400 text-xs ml-2">入管局提出用 — 留学生管理台帳</span>
         </div>
@@ -341,16 +341,16 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onCl
           </div>
           <div className="flex gap-1.5 items-center">
             <button onClick={handlePrint} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 text-white rounded hover:bg-emerald-800 transition text-xs">
-              <Printer size={14} /> 個票印刷
+              <Printer size={14} /> {tr('printCardLabel')}
             </button>
             <button onClick={() => setReportMode(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 text-white rounded hover:bg-black transition text-xs">
-              <FileText size={14} /> 入管報告書
+              <FileText size={14} /> {tr('immigReportLabel')}
             </button>
             <button onClick={() => setCertType('enrollment')} className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition text-xs">
-              在籍証明書
+              {tr('enrollCertLabel')}
             </button>
             <button onClick={() => setCertType('attendance')} className="flex items-center gap-1 px-3 py-1.5 bg-teal-600 text-white rounded hover:bg-teal-700 transition text-xs">
-              出席証明書
+              {tr('attendCertLabel')}
             </button>
             <button onClick={onClose} className="p-2 text-gray-500 hover:bg-gray-200 rounded-lg"><X size={18} /></button>
           </div>
@@ -379,7 +379,7 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onCl
                 <div className="w-28 h-36 bg-gray-100 rounded border overflow-hidden shrink-0 flex items-center justify-center text-gray-300 text-xs">
                   {student.photoBase64
                     ? <img src={student.photoBase64} className="w-full h-full object-cover" style={{ transform: `scale(${student.photoTransform?.scale}) translate(${student.photoTransform?.x}px, ${student.photoTransform?.y}px)` }} />
-                    : '写真なし'}
+                    : tr('noPhotoLabel')}
                 </div>
                 <div className="flex-1">
                   <p className="text-xl font-bold text-gray-900 mb-0.5">{student.name}</p>
@@ -448,7 +448,7 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onCl
                     disabled={emailSending}
                     className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50 transition font-bold"
                   >
-                    <Mail size={13} /> {emailSending ? '送信中...' : '催促メール送信'}
+                    <Mail size={13} /> {emailSending ? tr('sendingLabel') : tr('sendEmailLabel')}
                   </button>
                   {emailResult && (
                     <p className={`text-xs mt-1.5 ${emailResult.ok ? 'text-green-600' : 'text-red-600'}`}>
@@ -474,10 +474,10 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onCl
               )}
 
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-4 mb-2">銀行情報</p>
-              <Row label="銀行名" value={student.bankInfo.bankName || '未登録'} />
-              <Row label="支店名" value={student.bankInfo.branchName} />
-              <Row label="口座番号" value={student.bankInfo.accountNumber} />
-              <Row label="口座名義" value={student.bankInfo.accountHolder} />
+              <Row label={tr('bankNameLabel')} value={student.bankInfo.bankName || undefined} />
+              <Row label={tr('branchNameLabel')} value={student.bankInfo.branchName} />
+              <Row label={tr('accountNumberLabel')} value={student.bankInfo.accountNumber} />
+              <Row label={tr('accountHolderLabel')} value={student.bankInfo.accountHolder} />
             </div>
           )}
 
@@ -576,7 +576,7 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ student, onCl
                         <div>{r.summary}</div>
                       </div>
                     ))
-                    : <p className="text-xs text-gray-400">記録なし</p>}
+                    : <p className="text-xs text-gray-400">{tr('noRecordLabel')}</p>}
                 </div>
                 {onUpdateStudent && (
                   <div className="flex gap-2 mt-2">

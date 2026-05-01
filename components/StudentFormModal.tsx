@@ -270,7 +270,7 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                                 <span className="flex items-center gap-2"><Clock size={20}/> アルバイト管理 (資格外活動)</span>
                                 <label className="flex items-center gap-2 text-xs text-gray-600 font-normal bg-yellow-50 px-2 py-1 rounded border border-yellow-200">
                                     <input type="checkbox" checked={formData.workInfo.isLongVacation} onChange={e => handleWorkChange('isLongVacation', e.target.checked)} />
-                                    長期休暇中 (上限40h)
+                                    {tr('longVacCheck')}
                                 </label>
                             </h3>
                             
@@ -331,7 +331,7 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                                 <div className="flex items-center pt-6">
                                     <label className="flex items-center gap-2 font-bold text-gray-700 cursor-pointer">
                                         <input type="checkbox" checked={formData.academicInfo.creditsEarned} onChange={e => handleDeepChange('academicInfo', 'creditsEarned', e.target.checked)} className="w-5 h-5 text-indigo-600"/>
-                                        卒業必要単位 修得済み
+                                        {tr('creditEarned')}
                                     </label>
                                 </div>
                             </div>
@@ -482,11 +482,11 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                                     <label key={key} className="flex items-center gap-2 bg-gray-50 px-3 py-3 rounded border cursor-pointer hover:bg-gray-100 transition">
                                         <input type="checkbox" checked={(formData.visaChecklist as any)[key]} onChange={e => handleDeepChange('visaChecklist', key, e.target.checked)} className="w-5 h-5 text-indigo-600"/>
                                         <span className="text-sm font-medium">
-                                            {key === 'graduationCert' && '卒業証明書'}
-                                            {key === 'transcript' && '成績証明書'}
-                                            {key === 'attendanceCert' && '出席証明書'}
-                                            {key === 'recommendation' && '推薦状'}
-                                            {key === 'jobHuntingStatement' && '就活理由書'}
+                                            {key === 'graduationCert' && tr('visaGradCert')}
+                                            {key === 'transcript' && tr('visaTranscript')}
+                                            {key === 'attendanceCert' && tr('visaAttendCert')}
+                                            {key === 'recommendation' && tr('visaRecommend')}
+                                            {key === 'jobHuntingStatement' && tr('visaJobStatement')}
                                         </span>
                                     </label>
                                 ))}
@@ -506,10 +506,10 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
                                 <div><label className="text-xs font-bold text-gray-500">{tr('jobOfferLabel')}</label><input value={formData.targetCompany} onChange={e => handleChange('targetCompany', e.target.value)} className="w-full border p-2 rounded"/></div>
                             </div>
                             <div className="flex flex-wrap gap-4 bg-blue-50 p-4 rounded border border-blue-100 mb-4">
-                                <label className="flex items-center gap-2 font-bold text-sm text-blue-800"><input type="checkbox" checked={formData.careerMilestones.resumeComplete} onChange={e => handleDeepChange('careerMilestones', 'resumeComplete', e.target.checked)}/> 履歴書完成</label>
-                                <label className="flex items-center gap-2 font-bold text-sm text-blue-800"><input type="checkbox" checked={formData.careerMilestones.interviewTraining} onChange={e => handleDeepChange('careerMilestones', 'interviewTraining', e.target.checked)}/> 面接練習済</label>
-                                <label className="flex items-center gap-2 font-bold text-sm text-blue-800"><input type="checkbox" checked={formData.careerMilestones.jobOffer} onChange={e => handleDeepChange('careerMilestones', 'jobOffer', e.target.checked)}/> 内定獲得</label>
-                                <label className="flex items-center gap-2 font-bold text-sm text-blue-800"><input type="checkbox" checked={formData.careerMilestones.visaChangeApplied} onChange={e => handleDeepChange('careerMilestones', 'visaChangeApplied', e.target.checked)}/> 変更申請済</label>
+                                <label className="flex items-center gap-2 font-bold text-sm text-blue-800"><input type="checkbox" checked={formData.careerMilestones.resumeComplete} onChange={e => handleDeepChange('careerMilestones', 'resumeComplete', e.target.checked)}/> {tr('careerResume')}</label>
+                                <label className="flex items-center gap-2 font-bold text-sm text-blue-800"><input type="checkbox" checked={formData.careerMilestones.interviewTraining} onChange={e => handleDeepChange('careerMilestones', 'interviewTraining', e.target.checked)}/> {tr('careerInterview')}</label>
+                                <label className="flex items-center gap-2 font-bold text-sm text-blue-800"><input type="checkbox" checked={formData.careerMilestones.jobOffer} onChange={e => handleDeepChange('careerMilestones', 'jobOffer', e.target.checked)}/> {tr('careerOffer')}</label>
+                                <label className="flex items-center gap-2 font-bold text-sm text-blue-800"><input type="checkbox" checked={formData.careerMilestones.visaChangeApplied} onChange={e => handleDeepChange('careerMilestones', 'visaChangeApplied', e.target.checked)}/> {tr('careerVisaChange')}</label>
                             </div>
                             <div className="grid grid-cols-1 gap-2">
                                 <label className="text-xs font-bold text-gray-500">離籍後の住所（帰国/就職後）</label>

@@ -218,6 +218,45 @@ const ja = {
   lateFull: '遅刻',
   excusedFull: '公欠',
 
+  // Bank info
+  bankNameLabel: '銀行名',
+  branchNameLabel: '支店名',
+  accountNumberLabel: '口座番号',
+  accountHolderLabel: '口座名義',
+
+  // Profile modal buttons
+  printCardLabel: '個票印刷',
+  immigReportLabel: '入管報告書',
+  enrollCertLabel: '在籍証明書',
+  attendCertLabel: '出席証明書',
+  printLabel: '印刷',
+  closeLabel: '閉じる',
+  sendEmailLabel: '催促メール送信',
+  sendingLabel: '送信中...',
+  noPhotoLabel: '写真なし',
+  noRecordLabel: '記録なし',
+
+  // Form misc
+  longVacCheck: '長期休暇中 (上限40h)',
+  creditEarned: '卒業必要単位 修得済み',
+  settingSavedLabel: '学校設定を保存しました。',
+  deleteLogoLabel: '削除',
+  rightClickClear: '右クリック = クリア',
+  studentColLabel: '学生',
+
+  // Visa checklist labels
+  visaGradCert: '卒業証明書',
+  visaTranscript: '成績証明書',
+  visaAttendCert: '出席証明書',
+  visaRecommend: '推薦状',
+  visaJobStatement: '就活理由書',
+
+  // Career milestone labels
+  careerResume: '履歴書完成',
+  careerInterview: '面接練習',
+  careerOffer: '内定取得',
+  careerVisaChange: 'ビザ変更申請',
+
   // Common
   noData: 'データなし',
   loading: '読み込み中...',
@@ -414,6 +453,45 @@ const en: typeof ja = {
   absentFull: 'Absent',
   lateFull: 'Late',
   excusedFull: 'Excused',
+
+  // Bank info
+  bankNameLabel: 'Bank Name',
+  branchNameLabel: 'Branch',
+  accountNumberLabel: 'Account No.',
+  accountHolderLabel: 'Account Holder',
+
+  // Profile modal buttons
+  printCardLabel: 'Print Card',
+  immigReportLabel: 'Immigration Report',
+  enrollCertLabel: 'Enrollment Cert.',
+  attendCertLabel: 'Attendance Cert.',
+  printLabel: 'Print',
+  closeLabel: 'Close',
+  sendEmailLabel: 'Send Reminder',
+  sendingLabel: 'Sending...',
+  noPhotoLabel: 'No Photo',
+  noRecordLabel: 'No records',
+
+  // Form misc
+  longVacCheck: 'Long Vacation (max 40h)',
+  creditEarned: 'Required credits earned',
+  settingSavedLabel: 'School settings saved.',
+  deleteLogoLabel: 'Remove',
+  rightClickClear: 'right-click = clear',
+  studentColLabel: 'Student',
+
+  // Visa checklist labels
+  visaGradCert: 'Graduation Cert.',
+  visaTranscript: 'Transcript',
+  visaAttendCert: 'Attendance Cert.',
+  visaRecommend: 'Recommendation',
+  visaJobStatement: 'Job Hunting Statement',
+
+  // Career milestone labels
+  careerResume: 'Resume Complete',
+  careerInterview: 'Interview Practice',
+  careerOffer: 'Job Offer',
+  careerVisaChange: 'Visa Change Applied',
 
   // Common
   noData: 'No data',
